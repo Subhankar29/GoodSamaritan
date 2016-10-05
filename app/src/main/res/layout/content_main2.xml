@@ -50,17 +50,6 @@
         android:layout_centerHorizontal="true">
         <requestFocus />
     </Button>
-    <Button
-        android:layout_width="40dp"
-        android:layout_height="50dp"
-        android:text="@string/plus_sign"
-        android:textSize="25sp"
-        android:layout_below="@id/help_me"
-        android:layout_toLeftOf="@id/help_message"
-        android:layout_marginRight="8dp"
-        android:layout_marginTop="20dp"
-        android:id="@+id/plus_btn"
-        />
     <EditText
         android:id="@+id/help_message"
         android:layout_width="wrap_content"
@@ -84,6 +73,17 @@
         android:layout_marginTop="24dp"
         android:background="@color/colorAccent"
         android:textColor="@android:color/white"
+        />
+    <Button
+        android:layout_width="40dp"
+        android:layout_height="50dp"
+        android:text="@string/plus_sign"
+        android:textSize="25sp"
+        android:layout_below="@id/help_me"
+        android:layout_toLeftOf="@id/help_message"
+        android:layout_marginRight="8dp"
+        android:layout_marginTop="20dp"
+        android:id="@+id/plus_btn"
         />
 
 </RelativeLayout>
