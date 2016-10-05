@@ -4,6 +4,7 @@ import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.View;
 import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
@@ -13,6 +14,9 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.inputmethod.EditorInfo;
+import android.view.inputmethod.InputMethodManager;
+import android.widget.EditText;
 import android.widget.TextView;
 
 public class MainScreenActivity extends AppCompatActivity
@@ -25,6 +29,7 @@ public class MainScreenActivity extends AppCompatActivity
         setSupportActionBar(toolbar);
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         View nav=navigationView.getHeaderView(0);
+        final EditText help_message = (EditText) findViewById(R.id.help_message);
 
 
         //Set Title
@@ -38,6 +43,19 @@ public class MainScreenActivity extends AppCompatActivity
         //Set Email Id
         TextView main_screen_email=(TextView) nav.findViewById(R.id.main_screen_email);
         main_screen_email.setText(getIntent().getStringExtra("email"));
+
+        //Clear Focus once added message
+        help_message.setOnEditorActionListener(new TextView.OnEditorActionListener() {
+            @Override
+            public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
+                if(actionId== EditorInfo.IME_ACTION_DONE){
+                    //Clear focus here from edittext
+                    help_message.clearFocus();
+                    hideSoftKeyboard();
+                }
+                return false;
+            }
+        });
 
 
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
@@ -57,6 +75,13 @@ public class MainScreenActivity extends AppCompatActivity
 
 //        NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
+    }
+
+    public void hideSoftKeyboard() {
+        if(getCurrentFocus()!=null) {
+            InputMethodManager inputMethodManager = (InputMethodManager) getSystemService(INPUT_METHOD_SERVICE);
+            inputMethodManager.hideSoftInputFromWindow(getCurrentFocus().getWindowToken(), 0);
+        }
     }
 
     @Override
