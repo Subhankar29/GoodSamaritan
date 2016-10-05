@@ -3,6 +3,8 @@ package com.goodsamaritan;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
+import android.util.Log;
+import android.view.KeyEvent;
 import android.view.View;
 import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
@@ -12,6 +14,10 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.inputmethod.EditorInfo;
+import android.view.inputmethod.InputMethodManager;
+import android.widget.EditText;
+import android.widget.TextView;
 
 public class MainScreenActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
@@ -21,7 +27,36 @@ public class MainScreenActivity extends AppCompatActivity
         setContentView(R.layout.activity_main2);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+        NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
+        View nav=navigationView.getHeaderView(0);
+        final EditText help_message = (EditText) findViewById(R.id.help_message);
+
+
+        //Set Title
         setTitle(R.string.app_name);
+
+        //Set Profile Name
+        TextView main_screen_name= (TextView) nav.findViewById(R.id.main_screen_name);
+        main_screen_name.setText(getIntent().getExtras().getString("name","not"));
+        //System.out.println(getIntent().getStringExtra("name")+"\nEmail:"+getIntent().getStringExtra("email"));
+
+        //Set Email Id
+        TextView main_screen_email=(TextView) nav.findViewById(R.id.main_screen_email);
+        main_screen_email.setText(getIntent().getStringExtra("email"));
+
+        //Clear Focus once added message
+        help_message.setOnEditorActionListener(new TextView.OnEditorActionListener() {
+            @Override
+            public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
+                if(actionId== EditorInfo.IME_ACTION_DONE){
+                    //Clear focus here from edittext
+                    help_message.clearFocus();
+                    hideSoftKeyboard();
+                }
+                return false;
+            }
+        });
+
 
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
@@ -38,8 +73,15 @@ public class MainScreenActivity extends AppCompatActivity
         drawer.setDrawerListener(toggle);
         toggle.syncState();
 
-        NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
+//        NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
+    }
+
+    public void hideSoftKeyboard() {
+        if(getCurrentFocus()!=null) {
+            InputMethodManager inputMethodManager = (InputMethodManager) getSystemService(INPUT_METHOD_SERVICE);
+            inputMethodManager.hideSoftInputFromWindow(getCurrentFocus().getWindowToken(), 0);
+        }
     }
 
     @Override

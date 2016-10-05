@@ -5,6 +5,10 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
+import android.widget.EditText;
+import android.widget.TextView;
+
+import org.w3c.dom.Text;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -19,6 +23,11 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 Intent i = new Intent(MainActivity.this,MainScreenActivity.class);
+                EditText name = (EditText) findViewById(R.id.nameid);
+                EditText email = (EditText) findViewById(R.id.email);
+                i.putExtra("name",name.getText().toString());
+                i.putExtra("email",email.getText().toString());
+                System.out.println("Put values:#####\n\n\n "+name.getText()+" "+email.getText());
                 startActivity(i);
             }
         });
