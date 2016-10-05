@@ -52,13 +52,15 @@
     </Button>
     <Button
         android:layout_width="40dp"
-        android:layout_height="50dp"
+        android:layout_height="40dp"
         android:text="@string/plus_sign"
         android:textSize="25sp"
+        android:background="@drawable/round_button_add_message"
+        android:textColor="@android:color/white"
         android:layout_below="@id/help_me"
         android:layout_toLeftOf="@id/help_message"
         android:layout_marginRight="8dp"
-        android:layout_marginTop="20dp"
+        android:layout_marginTop="24dp"
         android:id="@+id/plus_btn"
         />
     <EditText
