@@ -19,6 +19,10 @@
             android:name=".MainScreenActivity"
             android:label="@string/title_activity_main2"
             android:theme="@style/AppTheme.NoActionBar"></activity>
+        <meta-data
+            android:name="io.fabric.ApiKey"
+            android:value="79356cf9efab9cf8fcdabf8b7e9db4bc45347348" />
     </application>
 
+    <uses-permission android:name="android.permission.INTERNET" />
 </manifest>
