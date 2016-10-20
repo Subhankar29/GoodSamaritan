@@ -1,10 +1,10 @@
 package com.goodsamaritan;
 
+import android.app.FragmentManager;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
-import android.util.Log;
-import android.view.KeyEvent;
 import android.view.View;
 import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
@@ -14,49 +14,83 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.inputmethod.EditorInfo;
-import android.view.inputmethod.InputMethodManager;
-import android.widget.EditText;
 import android.widget.TextView;
 
+import com.goodsamaritan.drawer.ContactsFragment;
+import com.goodsamaritan.drawer.contacts.Contacts;
+import com.goodsamaritan.drawer.contacts.HomeFragment;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
+
 public class MainScreenActivity extends AppCompatActivity
-        implements NavigationView.OnNavigationItemSelectedListener {
+        implements NavigationView.OnNavigationItemSelectedListener,ContactsFragment.OnListFragmentInteractionListener,HomeFragment.OnFragmentInteractionListener {
+
+    FragmentManager manager;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main2);
+        setContentView(R.layout.activity_main_screen);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         View nav=navigationView.getHeaderView(0);
-        final EditText help_message = (EditText) findViewById(R.id.help_message);
+
+        //Fragment Manager
+        manager = getFragmentManager();
+        //Set Home as default
+        navigationView.getMenu().getItem(0).setChecked(true);
+        HomeFragment homeFragment = new HomeFragment();
+        manager.beginTransaction().replace(R.id.content_main_screen_layout,homeFragment).commit();
 
 
         //Set Title
         setTitle(R.string.app_name);
 
+        //Initialize Firebase Database
+        FirebaseDatabase database = FirebaseDatabase.getInstance();
+        FirebaseAuth auth = FirebaseAuth.getInstance();
+
+
+
         //Set Profile Name
-        TextView main_screen_name= (TextView) nav.findViewById(R.id.main_screen_name);
+        final TextView main_screen_name= (TextView) nav.findViewById(R.id.main_screen_name);
         main_screen_name.setText(getIntent().getExtras().getString("name","not"));
         //System.out.println(getIntent().getStringExtra("name")+"\nEmail:"+getIntent().getStringExtra("email"));
 
         //Set Email Id
-        TextView main_screen_email=(TextView) nav.findViewById(R.id.main_screen_email);
+        final TextView main_screen_email=(TextView) nav.findViewById(R.id.main_screen_email);
         main_screen_email.setText(getIntent().getStringExtra("email"));
 
-        //Clear Focus once added message
-        help_message.setOnEditorActionListener(new TextView.OnEditorActionListener() {
+        database.getReference().getRoot().child("Users").child(auth.getCurrentUser().getUid()).child("name").addValueEventListener(new ValueEventListener() {
             @Override
-            public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
-                if(actionId== EditorInfo.IME_ACTION_DONE){
-                    //Clear focus here from edittext
-                    help_message.clearFocus();
-                    hideSoftKeyboard();
-                }
-                return false;
+            public void onDataChange(DataSnapshot dataSnapshot) {
+
+                main_screen_name.setText(dataSnapshot.getValue(String.class));
+
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
             }
         });
 
+        database.getReference().getRoot().child("Users").child(auth.getCurrentUser().getUid()).child("phone").addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+
+                main_screen_email.setText(dataSnapshot.getValue(String.class));
+
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        });
 
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
@@ -77,19 +111,18 @@ public class MainScreenActivity extends AppCompatActivity
         navigationView.setNavigationItemSelectedListener(this);
     }
 
-    public void hideSoftKeyboard() {
-        if(getCurrentFocus()!=null) {
-            InputMethodManager inputMethodManager = (InputMethodManager) getSystemService(INPUT_METHOD_SERVICE);
-            inputMethodManager.hideSoftInputFromWindow(getCurrentFocus().getWindowToken(), 0);
-        }
-    }
 
     @Override
     public void onBackPressed() {
+        NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         if (drawer.isDrawerOpen(GravityCompat.START)) {
             drawer.closeDrawer(GravityCompat.START);
-        } else {
+        } else if(!navigationView.getMenu().getItem(0).isChecked()){
+            HomeFragment homeFragment = new HomeFragment();
+            manager.beginTransaction().replace(R.id.content_main_screen_layout,homeFragment).commit();
+            navigationView.getMenu().getItem(0).setChecked(true);
+        } else{
             super.onBackPressed();
         }
     }
@@ -122,22 +155,34 @@ public class MainScreenActivity extends AppCompatActivity
         // Handle navigation view item clicks here.
         int id = item.getItemId();
 
-        if (id == R.id.nav_camera) {
-            // Handle the camera action
-        } else if (id == R.id.nav_gallery) {
 
-        } else if (id == R.id.nav_slideshow) {
+        if (id == R.id.nav_home) {
+            manager = getFragmentManager();
+            HomeFragment homeFragment= new HomeFragment();
+            manager.beginTransaction().replace(R.id.content_main_screen_layout,homeFragment).commit();
 
-        } else if (id == R.id.nav_manage) {
+        } else if (id == R.id.nav_profile) {
 
-        } else if (id == R.id.nav_share) {
+        } else if (id == R.id.nav_settings) {
 
-        } else if (id == R.id.nav_send) {
+        } else if (id == R.id.add_contacts) {
+            ContactsFragment contactsFragment = new ContactsFragment();
+            manager.beginTransaction().replace(R.id.content_main_screen_layout,contactsFragment).commit();
+        } else if (id == R.id.help_and_fb) {
 
         }
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
         return true;
+    }
+
+    @Override
+    public void onListFragmentInteraction(Contacts.ContactItem item) {
+    }
+
+    @Override
+    public void onFragmentInteraction(Uri uri) {
+
     }
 }
