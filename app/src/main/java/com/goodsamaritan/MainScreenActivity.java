@@ -19,6 +19,7 @@ import android.widget.TextView;
 import com.goodsamaritan.drawer.ContactsFragment;
 import com.goodsamaritan.drawer.contacts.Contacts;
 import com.goodsamaritan.drawer.contacts.HomeFragment;
+import com.goodsamaritan.drawer.help_and_feedback.HelpAndFeedbackFragment;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -26,7 +27,7 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
 public class MainScreenActivity extends AppCompatActivity
-        implements NavigationView.OnNavigationItemSelectedListener,ContactsFragment.OnListFragmentInteractionListener,HomeFragment.OnFragmentInteractionListener {
+        implements NavigationView.OnNavigationItemSelectedListener,ContactsFragment.OnListFragmentInteractionListener,HomeFragment.OnFragmentInteractionListener,HelpAndFeedbackFragment.OnHelpAndFeedbackInteractionListener {
 
     FragmentManager manager;
     @Override
@@ -169,6 +170,8 @@ public class MainScreenActivity extends AppCompatActivity
             ContactsFragment contactsFragment = new ContactsFragment();
             manager.beginTransaction().replace(R.id.content_main_screen_layout,contactsFragment).commit();
         } else if (id == R.id.help_and_fb) {
+            HelpAndFeedbackFragment helpAndFeedbackFragment = new HelpAndFeedbackFragment();
+            manager.beginTransaction().replace(R.id.content_main_screen_layout,helpAndFeedbackFragment).commit();
 
         }
 
@@ -183,6 +186,11 @@ public class MainScreenActivity extends AppCompatActivity
 
     @Override
     public void onFragmentInteraction(Uri uri) {
+
+    }
+
+    @Override
+    public void onHelpAndFeedbackInteraction(Uri uri) {
 
     }
 }
