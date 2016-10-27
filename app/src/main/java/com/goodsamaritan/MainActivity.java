@@ -302,11 +302,13 @@ public class MainActivity extends AppCompatActivity {
                 i.putExtra("email", email.getText().toString());
                 pd.dismiss();
 
-                if(isSignUpClicked){
+                if(/*isSignUpClicked*/true){
                     FirebaseDatabase database = FirebaseDatabase.getInstance();
                     User user =new User(mAuth.getCurrentUser().getUid(),name.getText().toString(),gender,Digits.getActiveSession().getPhoneNumber(),Contacts.ITEMS);
+                    //database.getReference().getRoot().child("Users").push().setValue(user.uid);
+                    System.out.println("FIREBASE SET_VALUE\n\n\n"+user.uid);
                     database.getReference().getRoot().child("Users").setValue(user.uid);
-                    database.getReference().getRoot().child("Users").child(user.uid).setValue(user);
+                    database.getReference().getRoot().child("Users/"+user.uid+"/").setValue(user);
                 }
 
                 startActivity(i);

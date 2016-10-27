@@ -139,6 +139,6 @@ public class ContactsFragment extends Fragment {
 
             }
         };
-        database.getReference().getRoot().child("Users").child(auth.getCurrentUser().getUid()).child("Contacts").addValueEventListener(valueEventListener);
+        database.getReference().getRoot().child("Users").child(auth.getCurrentUser().getUid()).child("contactItemList").addValueEventListener(valueEventListener);
     }
 }
