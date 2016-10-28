@@ -21,6 +21,7 @@ import com.goodsamaritan.drawer.contacts.Contacts;
 import com.goodsamaritan.drawer.contacts.HomeFragment;
 import com.goodsamaritan.drawer.help_and_feedback.HelpAndFeedbackFragment;
 import com.goodsamaritan.drawer.settings.SettingsFragment;
+import com.goodsamaritan.drawer.profile.ProfileFragment;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -28,7 +29,7 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
 public class MainScreenActivity extends AppCompatActivity
-        implements NavigationView.OnNavigationItemSelectedListener,ContactsFragment.OnListFragmentInteractionListener,HomeFragment.OnFragmentInteractionListener,HelpAndFeedbackFragment.OnHelpAndFeedbackInteractionListener,SettingsFragment.OnSettingsInteractionListener {
+        implements NavigationView.OnNavigationItemSelectedListener,ContactsFragment.OnListFragmentInteractionListener,HomeFragment.OnFragmentInteractionListener,HelpAndFeedbackFragment.OnHelpAndFeedbackInteractionListener,SettingsFragment.OnSettingsInteractionListener,ProfileFragment.OnProfileInteractionListener {
 
     FragmentManager manager;
     @Override
@@ -164,6 +165,8 @@ public class MainScreenActivity extends AppCompatActivity
             manager.beginTransaction().replace(R.id.content_main_screen_layout,homeFragment).commit();
 
         } else if (id == R.id.nav_profile) {
+            ProfileFragment profileFragment = new ProfileFragment();
+            manager.beginTransaction().replace(R.id.content_main_screen_layout,profileFragment).commit();
 
         } else if (id == R.id.nav_settings) {
             SettingsFragment settingsFragment = new SettingsFragment();
@@ -199,6 +202,11 @@ public class MainScreenActivity extends AppCompatActivity
 
     @Override
     public void onSettingsInteraction(Uri uri) {
+
+    }
+
+    @Override
+    public void onProfileInteraction(Uri uri) {
 
     }
 }
