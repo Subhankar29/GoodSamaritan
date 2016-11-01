@@ -1,0 +1,249 @@
+package com.goodsamaritan;
+
+import android.app.Notification;
+import android.app.NotificationManager;
+import android.app.Service;
+import android.content.Intent;
+import android.graphics.Color;
+import android.media.RingtoneManager;
+import android.os.Handler;
+import android.os.HandlerThread;
+import android.os.IBinder;
+import java.util.List;
+import android.content.Context;
+import android.location.Criteria;
+import android.location.Location;
+import android.location.LocationListener;
+import android.location.LocationManager;
+import android.os.Bundle;
+import android.os.SystemClock;
+import android.util.Log;
+
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
+
+public class LocationService extends Service {
+    static boolean isRunning=false;
+    static FirebaseDatabase database;
+    static FirebaseAuth auth;
+
+    private Handler eventHandler= null;
+    private HandlerThread eventThread= null;
+
+
+    public LocationService() {
+    }
+
+    @Override
+    public IBinder onBind(Intent intent) {
+        // TODO: Return the communication channel to the service.
+        throw new UnsupportedOperationException("Not yet implemented");
+    }
+
+
+    private LocationManager locationManager;
+    private final Criteria criteria = new Criteria();
+    private final static int minUpdateTime = 30000;
+    private final static int minUpdateDistance = 100;
+    private static UserLocation userLocation;
+    private static Location oUserLocation;
+    private static HelpListMaintainer maintainer;
+
+    private static final String TAG = "LOCATION_SERVICE";
+
+    @Override
+    public void onCreate() {
+        super.onCreate();
+
+        // Get a reference to the Location Manager
+        String svcName = Context.LOCATION_SERVICE;
+        locationManager = (LocationManager)getSystemService(svcName);
+
+        // Specify Location Provider criteria
+        criteria.setAccuracy(Criteria.ACCURACY_FINE);
+        criteria.setPowerRequirement(Criteria.POWER_LOW);
+        criteria.setAltitudeRequired(true);
+        criteria.setBearingRequired(true);
+        criteria.setSpeedRequired(true);
+        criteria.setCostAllowed(true);
+
+/*        // Only for Android 3.0 and above
+        criteria.setHorizontalAccuracy(Criteria.ACCURACY_HIGH);
+        criteria.setVerticalAccuracy(Criteria.ACCURACY_MEDIUM);
+        criteria.setBearingAccuracy(Criteria.ACCURACY_LOW);
+        criteria.setSpeedAccuracy(Criteria.ACCURACY_LOW);
+        // End of Android 3.0 and above only*/
+
+    }
+
+    @Override
+    public int onStartCommand(Intent intent,int flags, int startId){
+        isRunning=true;
+        database=FirebaseDatabase.getInstance();
+        auth = FirebaseAuth.getInstance();
+        database.getReference().child(".info/connected").addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                if(dataSnapshot.getValue(Boolean.class))database.getReference().getRoot().child("Users").child(auth.getCurrentUser().getUid()).child("isOnline").setValue("true");
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        });
+
+        database.getReference().getRoot().child("Users").child(auth.getCurrentUser().getUid()).child("isOnline").onDisconnect().setValue("false");
+        database.getReference().getRoot().child("Users").child(auth.getCurrentUser().getUid()).child("isAvailable").onDisconnect().setValue("false");
+
+        eventThread = new HandlerThread("EventThread");
+        eventThread.start();
+        eventHandler= new Handler(eventThread.getLooper());
+
+        //Start tracking user location
+        try {
+            registerListener();
+        }catch (SecurityException e){
+            Log.d("ERROR","/Not enough permission.");
+        }
+
+        //Obtain list of HelpUsers
+        maintainer = new HelpListMaintainer(eventHandler,this);
+
+
+        return Service.START_STICKY;
+    }
+
+
+    private void registerListener() throws SecurityException {
+        unregisterAllListeners();
+        String bestProvider =
+                locationManager.getBestProvider(criteria, false);
+        String bestAvailableProvider =
+                locationManager.getBestProvider(criteria, true);
+
+        Log.d(TAG, bestProvider + " / " + bestAvailableProvider);
+
+        if (bestProvider == null)
+            Log.d(TAG, "No Location Providers exist on device.");
+        else if (bestProvider.equals(bestAvailableProvider))
+            locationManager.requestLocationUpdates(bestAvailableProvider,
+                    minUpdateTime, minUpdateDistance,
+                    bestAvailableProviderListener);
+        else {
+            locationManager.requestLocationUpdates(bestProvider,
+                    minUpdateTime, minUpdateDistance, bestProviderListener);
+
+            if (bestAvailableProvider != null)
+                locationManager.requestLocationUpdates(bestAvailableProvider,
+                        minUpdateTime, minUpdateDistance,
+                        bestAvailableProviderListener);
+            else {
+                List<String> allProviders = locationManager.getAllProviders();
+                for (String provider : allProviders)
+                    locationManager.requestLocationUpdates(provider, 0, 0,
+                            bestProviderListener);
+                Log.d(TAG, "No Location Providers currently available.");
+            }
+        }
+    }
+
+    private void unregisterAllListeners() throws SecurityException {
+        locationManager.removeUpdates(bestProviderListener);
+        locationManager.removeUpdates(bestAvailableProviderListener);
+    }
+
+    private void reactToLocationChange(Location location) {
+        // TODO [ React to location change ]
+        Log.d("LOCATIONSERVICE","Location changed!");
+        userLocation = new UserLocation();
+        userLocation.latitude=Double.toString(location.getLatitude());
+        userLocation.longitude=Double.toString(location.getLongitude());
+        userLocation.provider=location.getProvider();
+        database.getReference().getRoot().child("Users").child(auth.getCurrentUser().getUid()).child("location").setValue(userLocation);
+        oUserLocation=location;
+
+        //Track if you have come near to a person who needs help
+        for(final HelpListUser user:maintainer.getUsers()){
+            eventHandler.postAtTime(new Runnable() {
+                @Override
+                public void run() {
+                    Log.d("LOCATIONSERVICE","Location changed! "+user.getUName()+" "+user.getUPhone());
+                    LocationService.track(user.getUName(),user.getUPhone(),user.getULocation(),LocationService.this);
+                }
+            }, SystemClock.uptimeMillis());
+        }
+
+    }
+
+    private LocationListener bestProviderListener
+            = new LocationListener() {
+
+        public void onLocationChanged(Location location) {
+            reactToLocationChange(location);
+        }
+
+        public void onProviderDisabled(String provider) {
+        }
+
+        public void onProviderEnabled(String provider) {
+            registerListener();
+        }
+
+        public void onStatusChanged(String provider,
+                                    int status, Bundle extras) {}
+    };
+
+    private LocationListener bestAvailableProviderListener =
+            new LocationListener() {
+                public void onProviderEnabled(String provider) {
+                }
+
+                public void onProviderDisabled(String provider) {
+                    registerListener();
+                }
+
+                public void onLocationChanged(Location location) {
+                    reactToLocationChange(location);
+                }
+
+                public void onStatusChanged(String provider,
+                                            int status, Bundle extras) {}
+            };
+
+    public static synchronized Location getUserLocation(){
+        return oUserLocation;
+    }
+
+    public static synchronized void track(String name,String phone,Location location,Context context){
+        if(name==null||phone==null||location==null||getUserLocation()==null){
+            Log.e("TRACKER","Objects either not initialized or destroyed!");
+            return;
+        } else{
+            if(getUserLocation().distanceTo(location)<=500){
+                NotificationManager notificationManager = (NotificationManager) context.getSystemService(NOTIFICATION_SERVICE);
+                Notification.Builder builder = new Notification.Builder(context);
+
+                builder.setSmallIcon(R.drawable.ic_menu_send)
+                        .setWhen(System.currentTimeMillis())
+                        .setDefaults(Notification.DEFAULT_SOUND | Notification.DEFAULT_VIBRATE)
+                        .setSound(RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION))
+                        .setVibrate(new long[] { 1000, 1000, 1000, 1000, 1000 })
+                        .setLights(Color.RED, 0, 1)
+                        .setContentTitle(name+" is nearby and needs your help!")
+                        .setContentText("Contact the person:"+phone);
+
+                Notification notification = builder.build();
+                notificationManager.notify(0,notification);
+
+                Log.d("NOTIFICATION","It's built.");
+            } else {
+                Log.d("TRACKER","Distance is:"+getUserLocation().distanceTo(location));
+            }
+        }
+
+    }
+}

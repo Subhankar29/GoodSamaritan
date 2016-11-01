@@ -33,13 +33,14 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.twitter.sdk.android.core.TwitterAuthConfig;
 import com.twitter.sdk.android.core.TwitterCore;
 
+import java.io.Serializable;
 import java.util.Arrays;
 import java.util.List;
 
 import io.fabric.sdk.android.Fabric;
 
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements Serializable {
 
     // Note: Your consumer key and secret should be obfuscated in your source code before shipping.
     private static final String TWITTER_KEY = "C9sUZZm8FFI96HVnS2EWxGvJM";
@@ -298,16 +299,14 @@ public class MainActivity extends AppCompatActivity {
                         break;
                 }
 
-                i.putExtra("name", name.getText().toString());
-                i.putExtra("email", email.getText().toString());
                 pd.dismiss();
 
                 if(/*isSignUpClicked*/true){
                     FirebaseDatabase database = FirebaseDatabase.getInstance();
-                    User user =new User(mAuth.getCurrentUser().getUid(),name.getText().toString(),gender,Digits.getActiveSession().getPhoneNumber(),Contacts.ITEMS);
+                    User user =new User(mAuth.getCurrentUser().getUid(),name.getText().toString(),gender,Digits.getActiveSession().getPhoneNumber(),Contacts.ITEMS,"0");
                     //database.getReference().getRoot().child("Users").push().setValue(user.uid);
                     System.out.println("FIREBASE SET_VALUE\n\n\n"+user.uid);
-                    database.getReference().getRoot().child("Users").setValue(user.uid);
+                    //database.getReference().getRoot().child("Users").setValue(user.uid);
                     database.getReference().getRoot().child("Users/"+user.uid+"/").setValue(user);
                 }
 

@@ -1,10 +1,10 @@
 package com.goodsamaritan;
 
 import android.app.FragmentManager;
+import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
-import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
+import android.util.Log;
 import android.view.View;
 import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
@@ -16,9 +16,9 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.TextView;
 
-import com.goodsamaritan.drawer.ContactsFragment;
+import com.goodsamaritan.drawer.contacts.ContactsFragment;
 import com.goodsamaritan.drawer.contacts.Contacts;
-import com.goodsamaritan.drawer.contacts.HomeFragment;
+import com.goodsamaritan.drawer.home.HomeFragment;
 import com.goodsamaritan.drawer.help_and_feedback.HelpAndFeedbackFragment;
 import com.goodsamaritan.drawer.settings.SettingsFragment;
 import com.goodsamaritan.drawer.profile.ProfileFragment;
@@ -29,9 +29,11 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
 public class MainScreenActivity extends AppCompatActivity
-        implements NavigationView.OnNavigationItemSelectedListener,ContactsFragment.OnListFragmentInteractionListener,HomeFragment.OnFragmentInteractionListener,HelpAndFeedbackFragment.OnHelpAndFeedbackInteractionListener,SettingsFragment.OnSettingsInteractionListener,ProfileFragment.OnProfileInteractionListener {
+        implements NavigationView.OnNavigationItemSelectedListener,ContactsFragment.OnListFragmentInteractionListener,HomeFragment.OnHomeInteractionListener,HelpAndFeedbackFragment.OnHelpAndFeedbackInteractionListener,SettingsFragment.OnSettingsInteractionListener,ProfileFragment.OnProfileInteractionListener {
 
     FragmentManager manager;
+    FirebaseAuth auth;
+    FirebaseDatabase database;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -41,8 +43,9 @@ public class MainScreenActivity extends AppCompatActivity
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         View nav=navigationView.getHeaderView(0);
 
-        //Fragment Manager
+        //Initialize Fragment Manager
         manager = getFragmentManager();
+
         //Set Home as default
         navigationView.getMenu().getItem(0).setChecked(true);
         HomeFragment homeFragment = new HomeFragment();
@@ -53,20 +56,13 @@ public class MainScreenActivity extends AppCompatActivity
         setTitle(R.string.app_name);
 
         //Initialize Firebase Database
-        FirebaseDatabase database = FirebaseDatabase.getInstance();
-        FirebaseAuth auth = FirebaseAuth.getInstance();
+        database = FirebaseDatabase.getInstance();
+        auth = FirebaseAuth.getInstance();
 
 
 
         //Set Profile Name
         final TextView main_screen_name= (TextView) nav.findViewById(R.id.main_screen_name);
-        main_screen_name.setText(getIntent().getExtras().getString("name","not"));
-        //System.out.println(getIntent().getStringExtra("name")+"\nEmail:"+getIntent().getStringExtra("email"));
-
-        //Set Email Id
-        final TextView main_screen_email=(TextView) nav.findViewById(R.id.main_screen_email);
-        main_screen_email.setText(getIntent().getStringExtra("email"));
-
         database.getReference().getRoot().child("Users").child(auth.getCurrentUser().getUid()).child("name").addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
@@ -81,6 +77,9 @@ public class MainScreenActivity extends AppCompatActivity
             }
         });
 
+
+        //Set Email Id
+        final TextView main_screen_email=(TextView) nav.findViewById(R.id.main_screen_email);
         database.getReference().getRoot().child("Users").child(auth.getCurrentUser().getUid()).child("phone").addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
@@ -95,14 +94,15 @@ public class MainScreenActivity extends AppCompatActivity
             }
         });
 
-        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
+
+        /*FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
                         .setAction("Action", null).show();
             }
-        });
+        });*/
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
@@ -110,9 +110,74 @@ public class MainScreenActivity extends AppCompatActivity
         drawer.setDrawerListener(toggle);
         toggle.syncState();
 
-//        NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
     }
+
+    @Override
+    public void onStart(){
+        super.onStart();
+        database.getReference().getRoot().child("Users").child(auth.getCurrentUser().getUid()).child("isAvailable").setValue("true");
+        if(!LocationService.isRunning){
+            Log.d("LOCATIONSERVICE","Started");
+            Thread t1 = new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    startService(new Intent(MainScreenActivity.this,LocationService.class));
+                }
+            });
+            t1.start();
+        } else Log.d("LOCATIONSERVICE","Running");
+        /*if(!HelpUIDService.isRunning){
+            Log.d("HELPUID","Started");
+            Thread t2 = new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    startService(new Intent(MainScreenActivity.this,HelpUIDService.class));
+                }
+            });
+            t2.start();
+        } else Log.d("HELPUID","Running");*/
+
+    }
+
+    @Override
+    public void onPause(){
+        database.getReference().getRoot().child("Users").child(auth.getCurrentUser().getUid()).child("isAvailable").setValue("false");
+        super.onPause();
+    }
+
+    @Override
+    public void onResume(){
+        super.onResume();
+        database.getReference().getRoot().child("Users").child(auth.getCurrentUser().getUid()).child("isAvailable").setValue("true");
+    }
+
+    @Override
+    public void onStop(){
+        database.getReference().getRoot().child("Users").child(auth.getCurrentUser().getUid()).child("isAvailable").setValue("false");
+        super.onStop();
+    }
+
+    @Override
+    public void onDestroy(){
+        database.getReference().getRoot().child("Users").child(auth.getCurrentUser().getUid()).child("isAvailable").setValue("false");
+        super.onDestroy();
+
+    }
+
+    @Override
+    public void onSaveInstanceState(Bundle savedInstanceState){
+        database.getReference().getRoot().child("Users").child(auth.getCurrentUser().getUid()).child("isAvailable").setValue("false");
+        super.onSaveInstanceState(savedInstanceState);
+    }
+
+    @Override
+    public void onRestoreInstanceState(Bundle savedInstanceState){
+        super.onSaveInstanceState(savedInstanceState);
+        database.getReference().getRoot().child("Users").child(auth.getCurrentUser().getUid()).child("isAvailable").setValue("true");
+    }
+
+
 
 
     @Override
@@ -125,9 +190,9 @@ public class MainScreenActivity extends AppCompatActivity
             HomeFragment homeFragment = new HomeFragment();
             manager.beginTransaction().replace(R.id.content_main_screen_layout,homeFragment).commit();
             navigationView.getMenu().getItem(0).setChecked(true);
-        } else{
+        } /*else{
             super.onBackPressed();
-        }
+        }*/
     }
 
     @Override
@@ -191,7 +256,7 @@ public class MainScreenActivity extends AppCompatActivity
     }
 
     @Override
-    public void onFragmentInteraction(Uri uri) {
+    public void onHomeInteraction(Uri uri) {
 
     }
 

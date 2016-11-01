@@ -10,7 +10,7 @@ android:paddingLeft="@dimen/activity_horizontal_margin"
 android:paddingRight="@dimen/activity_horizontal_margin"
 android:paddingTop="@dimen/activity_vertical_margin"
 app:layout_behavior="@string/appbar_scrolling_view_behavior"
-tools:context="com.goodsamaritan.drawer.contacts.HomeFragment"
+tools:context="com.goodsamaritan.drawer.home.HomeFragment"
 android:descendantFocusability="beforeDescendants"
 android:focusableInTouchMode="true">
 
@@ -63,6 +63,7 @@ android:focusableInTouchMode="true">
     android:inputType="textAutoComplete"
     />
 <Button
+    android:id="@+id/imsafe"
     android:layout_width="100dp"
     android:layout_height="wrap_content"
     android:text="@string/i_m_safe"

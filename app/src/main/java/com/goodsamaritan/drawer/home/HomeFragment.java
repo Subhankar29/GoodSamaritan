@@ -1,4 +1,4 @@
-package com.goodsamaritan.drawer.contacts;
+package com.goodsamaritan.drawer.home;
 
 import android.content.Context;
 import android.net.Uri;
@@ -10,17 +10,23 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 
 import com.goodsamaritan.R;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 
 import static android.content.Context.INPUT_METHOD_SERVICE;
 
 /**
  * A simple {@link Fragment} subclass.
  * Activities that contain this fragment must implement the
- * {@link HomeFragment.OnFragmentInteractionListener} interface
+ * {@link OnHomeInteractionListener} interface
  * to handle interaction events.
  * Use the {@link HomeFragment#newInstance} factory method to
  * create an instance of this fragment.
@@ -35,7 +41,7 @@ public class HomeFragment extends Fragment {
     private String mParam1;
     private String mParam2;
 
-    private OnFragmentInteractionListener mListener;
+    private OnHomeInteractionListener mListener;
 
     public HomeFragment() {
         // Required empty public constructor
@@ -78,15 +84,15 @@ public class HomeFragment extends Fragment {
     // TODO: Rename method, update argument and hook method into UI event
     public void onButtonPressed(Uri uri) {
         if (mListener != null) {
-            mListener.onFragmentInteraction(uri);
+            mListener.onHomeInteraction(uri);
         }
     }
 
     @Override
     public void onAttach(Context context) {
         super.onAttach(context);
-        if (context instanceof OnFragmentInteractionListener) {
-            mListener = (OnFragmentInteractionListener) context;
+        if (context instanceof OnHomeInteractionListener) {
+            mListener = (OnHomeInteractionListener) context;
         } else {
             throw new RuntimeException(context.toString()
                     + " must implement OnSettingsInteractionListener");
@@ -109,15 +115,19 @@ public class HomeFragment extends Fragment {
      * "http://developer.android.com/training/basics/fragments/communicating.html"
      * >Communicating with Other Fragments</a> for more information.
      */
-    public interface OnFragmentInteractionListener {
+    public interface OnHomeInteractionListener {
         // TODO: Update argument type and name
-        void onFragmentInteraction(Uri uri);
+        void onHomeInteraction(Uri uri);
     }
 
     @Override
     public void onStart() {
         super.onStart();
         final EditText help_message = (EditText) getView().findViewById(R.id.help_message);
+
+        //Initialize Firebase Database
+        final FirebaseDatabase database = FirebaseDatabase.getInstance();
+        final FirebaseAuth auth = FirebaseAuth.getInstance();
 
         //Clear Focus once added message
         help_message.setOnEditorActionListener(new TextView.OnEditorActionListener() {
@@ -129,6 +139,38 @@ public class HomeFragment extends Fragment {
                     hideSoftKeyboard();
                 }
                 return false;
+            }
+        });
+
+        //Set Credits
+        final TextView credit_points=(TextView) getView().findViewById(R.id.credit_points);
+        database.getReference().getRoot().child("Users").child(auth.getCurrentUser().getUid()).child("credit_points").addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                credit_points.setText(dataSnapshot.getValue(String.class));
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        });
+
+        //Listener for Help Button
+        Button help_me = (Button) getView().findViewById(R.id.help_me);
+        help_me.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                database.getReference().getRoot().child("HelpUID").child(auth.getCurrentUser().getUid()).setValue(((EditText) getView().findViewById(R.id.help_message)).getText().toString());
+            }
+        });
+
+        //Listener for Safe Button
+        Button imsafe = (Button) getView().findViewById(R.id.imsafe);
+        imsafe.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                database.getReference().getRoot().child("HelpUID").child(auth.getCurrentUser().getUid()).removeValue();
             }
         });
     }

@@ -1,4 +1,4 @@
-package com.goodsamaritan.drawer;
+package com.goodsamaritan.drawer.contacts;
 
 import android.content.Context;
 import android.os.Bundle;
@@ -11,7 +11,7 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import com.goodsamaritan.R;
-import com.goodsamaritan.drawer.contacts.Contacts;
+import com.goodsamaritan.drawer.MyItemRecyclerViewAdapter;
 import com.goodsamaritan.drawer.contacts.Contacts.ContactItem;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;

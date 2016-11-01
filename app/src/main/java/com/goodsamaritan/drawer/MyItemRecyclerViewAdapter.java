@@ -7,7 +7,7 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 
 import com.goodsamaritan.R;
-import com.goodsamaritan.drawer.ContactsFragment.OnListFragmentInteractionListener;
+import com.goodsamaritan.drawer.contacts.ContactsFragment.OnListFragmentInteractionListener;
 import com.goodsamaritan.drawer.contacts.Contacts.ContactItem;
 
 import java.util.List;
