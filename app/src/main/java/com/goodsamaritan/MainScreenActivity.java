@@ -2,6 +2,7 @@ package com.goodsamaritan;
 
 import android.app.FragmentManager;
 import android.content.Intent;
+import android.location.Location;
 import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
@@ -94,16 +95,6 @@ public class MainScreenActivity extends AppCompatActivity
             }
         });
 
-
-        /*FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
-        fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
-            }
-        });*/
-
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
                 this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
@@ -122,21 +113,34 @@ public class MainScreenActivity extends AppCompatActivity
             Thread t1 = new Thread(new Runnable() {
                 @Override
                 public void run() {
-                    startService(new Intent(MainScreenActivity.this,LocationService.class));
+                    startService(new Intent(MainScreenActivity.this,LocationService.class).putExtra("com.goodsamaritan.myphone",getIntent().getStringExtra("com.goodsamaritan.myphone")));
                 }
             });
             t1.start();
         } else Log.d("LOCATIONSERVICE","Running");
-        /*if(!HelpUIDService.isRunning){
-            Log.d("HELPUID","Started");
-            Thread t2 = new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    startService(new Intent(MainScreenActivity.this,HelpUIDService.class));
-                }
-            });
-            t2.start();
-        } else Log.d("HELPUID","Running");*/
+
+        if(getIntent().getExtras()==null)
+        Log.d("GETEXTRAS:","It's null");
+        if(getIntent().getExtras()!=null&&getIntent().getExtras().getBoolean("startMaps")){
+            Location location =getIntent().getExtras().getParcelable("location");
+            Intent mapIntent = new Intent(MainScreenActivity.this,RouteFragmentActivity.class);
+            mapIntent.putExtra("location",location);
+            startActivity(mapIntent);
+
+        }
+        if(getIntent().getBooleanExtra("com.goodsamaritan.startMaps",false)){
+
+
+            Location location =getIntent().getParcelableExtra("com.goodsamaritan.location");
+
+            Log.d("LOCATION","Name:"+getIntent().getStringExtra("com.goodsamaritan.name")+" lat:"+location.getLatitude()+" long:"+location.getLongitude());
+
+            Uri gmmIntentUri = Uri.parse("google.navigation:q="+location.getLatitude()+","+location.getLongitude());
+            Intent mapIntent = new Intent(Intent.ACTION_VIEW, gmmIntentUri);
+            mapIntent.setPackage("com.google.android.apps.maps");
+            startActivity(mapIntent);
+
+        }
 
     }
 
@@ -150,6 +154,13 @@ public class MainScreenActivity extends AppCompatActivity
     public void onResume(){
         super.onResume();
         database.getReference().getRoot().child("Users").child(auth.getCurrentUser().getUid()).child("isAvailable").setValue("true");
+
+        if(getIntent().getExtras()!=null&&getIntent().getExtras().getBoolean("startMaps")) {
+            Location location = getIntent().getExtras().getParcelable("location");
+            Intent mapIntent = new Intent(MainScreenActivity.this, RouteFragmentActivity.class);
+            mapIntent.putExtra("location", location);
+            startActivity(mapIntent);
+        }
     }
 
     @Override

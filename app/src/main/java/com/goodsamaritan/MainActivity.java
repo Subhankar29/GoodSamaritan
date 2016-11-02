@@ -310,6 +310,7 @@ public class MainActivity extends AppCompatActivity implements Serializable {
                     database.getReference().getRoot().child("Users/"+user.uid+"/").setValue(user);
                 }
 
+                i.putExtra("com.goodsamaritan.myphone",Digits.getActiveSession().getPhoneNumber());
                 startActivity(i);
             }
         };

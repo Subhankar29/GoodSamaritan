@@ -2,11 +2,13 @@ package com.goodsamaritan;
 
 import android.app.Notification;
 import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.drawable.BitmapDrawable;
 import android.media.RingtoneManager;
+import android.net.Uri;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.IBinder;
@@ -17,6 +19,8 @@ import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.Bundle;
+import android.os.Parcel;
+import android.os.Parcelable;
 import android.os.SystemClock;
 import android.util.Log;
 
@@ -33,6 +37,8 @@ public class LocationService extends Service {
 
     private Handler eventHandler= null;
     private HandlerThread eventThread= null;
+    private static int notificationCount=0;
+    private static String myphone;
 
 
     public LocationService() {
@@ -115,7 +121,9 @@ public class LocationService extends Service {
         maintainer = new HelpListMaintainer(eventHandler,this);
 
 
-        return Service.START_STICKY;
+        myphone=intent.getStringExtra("com.goodsamaritan.myphone");
+
+        return Service.START_REDELIVER_INTENT;
     }
 
 
@@ -159,7 +167,7 @@ public class LocationService extends Service {
 
     private void reactToLocationChange(Location location) {
         // TODO [ React to location change ]
-        Log.d("LOCATIONSERVICE","Location changed!");
+        Log.d("LOCATIONSERVICE","My Location changed!");
         userLocation = new UserLocation();
         userLocation.latitude=Double.toString(location.getLatitude());
         userLocation.longitude=Double.toString(location.getLongitude());
@@ -220,11 +228,22 @@ public class LocationService extends Service {
     }
 
     public static synchronized void track(String name,String phone,Location location,Context context){
+
         if(name==null||phone==null||location==null||getUserLocation()==null){
             Log.e("TRACKER","Objects either not initialized or destroyed!");
             return;
         } else{
-            if(getUserLocation().distanceTo(location)<=500){
+            if((getUserLocation().distanceTo(location)<=500) && !(phone.equals(myphone))){
+
+                Intent mainScreen = new Intent(context,MainScreenActivity.class);
+                mainScreen.putExtra("com.goodsamaritan.name",name)
+                        .putExtra("com.goodsamaritan.phone",phone)
+                        .putExtra("com.goodsamaritan.location",location)
+                        .putExtra("com.goodsamaritan.startMaps",true);
+                mainScreen.setData(Uri.parse(name+phone+location));
+                PendingIntent intent = PendingIntent.getActivity(context, 1,mainScreen, PendingIntent.FLAG_UPDATE_CURRENT);
+
+
                 NotificationManager notificationManager = (NotificationManager) context.getSystemService(NOTIFICATION_SERVICE);
                 Notification.Builder builder = new Notification.Builder(context);
 
@@ -236,13 +255,17 @@ public class LocationService extends Service {
                         .setVibrate(new long[] { 1000, 1000, 1000, 1000, 1000 })
                         .setLights(Color.RED, 0, 1)
                         .setContentTitle(name+" is nearby and needs your help!")
-                        .setContentText("Contact the person:"+phone);
+                        .setContentText("Contact the person:"+phone)
+                        .setStyle(new Notification.BigTextStyle().bigText(name+" is nearby and needs your help!"+"\nContact the person:"+phone))
+                        .setContentIntent(intent)
+                        .setAutoCancel(true);
 
                 Notification notification = builder.build();
-                notificationManager.notify(0,notification);
+                //notificationManager.notify(LocationService.notificationCount++,notification); //Separate Notification per trigger.
+                notificationManager.notify(Integer.parseInt(phone.substring(4)),notification); //May only work in india, that too first integer is removed.
 
                 Log.d("NOTIFICATION","It's built.");
-                Log.d("TRACKER","Distance is:"+getUserLocation().distanceTo(location));
+                Log.d("TRACKER","Distance is:"+getUserLocation().distanceTo(location)+"Notification ID:"+phone.substring(3));
             } else {
                 Log.d("TRACKER","Distance is:"+getUserLocation().distanceTo(location));
             }
