@@ -227,7 +227,7 @@ public class LocationService extends Service {
                 NotificationManager notificationManager = (NotificationManager) context.getSystemService(NOTIFICATION_SERVICE);
                 Notification.Builder builder = new Notification.Builder(context);
 
-                builder.setSmallIcon(R.drawable.ic_menu_send)
+                builder.setSmallIcon(R.drawable.ic_notification)
                         .setWhen(System.currentTimeMillis())
                         .setDefaults(Notification.DEFAULT_SOUND | Notification.DEFAULT_VIBRATE)
                         .setSound(RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION))
