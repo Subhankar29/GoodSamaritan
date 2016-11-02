@@ -5,6 +5,7 @@ import android.app.NotificationManager;
 import android.app.Service;
 import android.content.Intent;
 import android.graphics.Color;
+import android.graphics.drawable.BitmapDrawable;
 import android.media.RingtoneManager;
 import android.os.Handler;
 import android.os.HandlerThread;
@@ -228,6 +229,7 @@ public class LocationService extends Service {
                 Notification.Builder builder = new Notification.Builder(context);
 
                 builder.setSmallIcon(R.drawable.ic_notification)
+                        .setLargeIcon(((BitmapDrawable)context.getResources().getDrawable(R.drawable.ic_notification)).getBitmap())
                         .setWhen(System.currentTimeMillis())
                         .setDefaults(Notification.DEFAULT_SOUND | Notification.DEFAULT_VIBRATE)
                         .setSound(RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION))
@@ -240,6 +242,7 @@ public class LocationService extends Service {
                 notificationManager.notify(0,notification);
 
                 Log.d("NOTIFICATION","It's built.");
+                Log.d("TRACKER","Distance is:"+getUserLocation().distanceTo(location));
             } else {
                 Log.d("TRACKER","Distance is:"+getUserLocation().distanceTo(location));
             }
