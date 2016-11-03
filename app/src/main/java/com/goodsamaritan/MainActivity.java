@@ -9,6 +9,7 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.RadioButton;
 import android.widget.RadioGroup;
 import android.widget.Toast;
 import com.digits.sdk.android.*;
@@ -79,25 +80,38 @@ public class MainActivity extends AppCompatActivity implements Serializable {
 
         //Start with Phone Number verification, then Facebook and then Firebase
         //In future, will check Firebase database to verify if new or old account.
-        EditText phone = (EditText) findViewById(R.id.phoneid);
+        final EditText phone = (EditText) findViewById(R.id.phoneid);
         System.out.println("BEFORE PHONE");
 
-        //Initialize Digits Kit
-        /*TwitterAuthConfig authConfig = new TwitterAuthConfig(TWITTER_KEY, TWITTER_SECRET);
-        Fabric.with(this, new TwitterCore(authConfig), new Digits.Builder().build());
-        Digits.clearActiveSession();*/
+
         startPhoneNumberVerification(phone.getText());
 
         Button sign_up_btn= (Button) findViewById(R.id.sign_up_btn);
         sign_up_btn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                EditText nameText = (EditText) findViewById(R.id.nameid);
+                EditText emailText = (EditText) findViewById(R.id.email);
+                RadioButton radioFemale = (RadioButton) findViewById(R.id.radioFemale);
+                EditText phoneText = (EditText) findViewById(R.id.phoneid);
+                EditText passwordText = (EditText) findViewById(R.id.passwordid);
+                RadioGroup radioGroup = (RadioGroup) findViewById(R.id.radioSex);
 
-                isSignUpClicked=true;
-                //Start with Phone Number verification, then Facebook and then Firebase
+                if(nameText.getText().length()==0)nameText.setError("Required!");
+                else if(emailText.getText().length()==0)emailText.setError("Required!");
+                else if(phoneText.getText().length()==0)phoneText.setError("Required!");
+                else if(passwordText.getText().length()==0)passwordText.setError("Required!");
+                else if(radioGroup.getCheckedRadioButtonId()==-1)radioFemale.setError("Required!");
+                else {
+                    isSignUpClicked=true;
+                    //Start with Phone Number verification, then Facebook and then Firebase
 
-                EditText phone = (EditText) findViewById(R.id.phoneid);
-                startPhoneNumberVerification(phone.getText());
+                    EditText phone = (EditText) findViewById(R.id.phoneid);
+                    startPhoneNumberVerification(phone.getText());
+
+                }
+
+
 
             }
         });
