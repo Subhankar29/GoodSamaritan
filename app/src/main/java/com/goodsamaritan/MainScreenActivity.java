@@ -121,13 +121,14 @@ public class MainScreenActivity extends AppCompatActivity
 
         if(getIntent().getExtras()==null)
         Log.d("GETEXTRAS:","It's null");
-        if(getIntent().getExtras()!=null&&getIntent().getExtras().getBoolean("startMaps")){
+        /*if(getIntent().getExtras()!=null&&getIntent().getExtras().getBoolean("startMaps")){
             Location location =getIntent().getExtras().getParcelable("location");
             Intent mapIntent = new Intent(MainScreenActivity.this,RouteFragmentActivity.class);
             mapIntent.putExtra("location",location);
+            getIntent().getExtras().clear();
             startActivity(mapIntent);
 
-        }
+        }*/
         if(getIntent().getBooleanExtra("com.goodsamaritan.startMaps",false)){
 
 
@@ -138,6 +139,7 @@ public class MainScreenActivity extends AppCompatActivity
             Uri gmmIntentUri = Uri.parse("google.navigation:q="+location.getLatitude()+","+location.getLongitude());
             Intent mapIntent = new Intent(Intent.ACTION_VIEW, gmmIntentUri);
             mapIntent.setPackage("com.google.android.apps.maps");
+            getIntent().removeExtra("com.goodsamaritan.startMaps");  //Required, else this block will launch the Maps intent everytime,
             startActivity(mapIntent);
 
         }
@@ -155,12 +157,13 @@ public class MainScreenActivity extends AppCompatActivity
         super.onResume();
         database.getReference().getRoot().child("Users").child(auth.getCurrentUser().getUid()).child("isAvailable").setValue("true");
 
-        if(getIntent().getExtras()!=null&&getIntent().getExtras().getBoolean("startMaps")) {
+        /*if(getIntent().getExtras()!=null&&getIntent().getExtras().getBoolean("startMaps")) {
             Location location = getIntent().getExtras().getParcelable("location");
             Intent mapIntent = new Intent(MainScreenActivity.this, RouteFragmentActivity.class);
             mapIntent.putExtra("location", location);
+            getIntent().getExtras().clear();
             startActivity(mapIntent);
-        }
+        }*/
     }
 
     @Override
