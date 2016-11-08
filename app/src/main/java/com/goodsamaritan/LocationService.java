@@ -22,15 +22,21 @@ import android.os.Bundle;
 import android.os.Parcel;
 import android.os.Parcelable;
 import android.os.SystemClock;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.util.Log;
 
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.location.LocationServices;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
-public class LocationService extends Service {
+public class LocationService extends Service implements
+        GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener {
     static boolean isRunning=false;
     static FirebaseDatabase database;
     static FirebaseAuth auth;
@@ -39,6 +45,9 @@ public class LocationService extends Service {
     private HandlerThread eventThread= null;
     private static int notificationCount=0;
     private static String myphone;
+
+    //Google API Client for getting last known location
+    GoogleApiClient googleApiClient;
 
 
     public LocationService() {
@@ -77,12 +86,13 @@ public class LocationService extends Service {
         criteria.setSpeedRequired(true);
         criteria.setCostAllowed(true);
 
-/*        // Only for Android 3.0 and above
-        criteria.setHorizontalAccuracy(Criteria.ACCURACY_HIGH);
-        criteria.setVerticalAccuracy(Criteria.ACCURACY_MEDIUM);
-        criteria.setBearingAccuracy(Criteria.ACCURACY_LOW);
-        criteria.setSpeedAccuracy(Criteria.ACCURACY_LOW);
-        // End of Android 3.0 and above only*/
+        if (googleApiClient == null) {
+            googleApiClient = new GoogleApiClient.Builder(this)
+                    .addConnectionCallbacks(this)
+                    .addOnConnectionFailedListener(this)
+                    .addApi(LocationServices.API)
+                    .build();
+        }
 
     }
 
@@ -102,6 +112,9 @@ public class LocationService extends Service {
 
             }
         });
+
+        //Get last known location of user
+        googleApiClient.connect();
 
         database.getReference().getRoot().child("Users").child(auth.getCurrentUser().getUid()).child("isOnline").onDisconnect().setValue("false");
         database.getReference().getRoot().child("Users").child(auth.getCurrentUser().getUid()).child("isAvailable").onDisconnect().setValue("false");
@@ -173,7 +186,8 @@ public class LocationService extends Service {
         userLocation.longitude=Double.toString(location.getLongitude());
         userLocation.provider=location.getProvider();
         database.getReference().getRoot().child("Users").child(auth.getCurrentUser().getUid()).child("location").setValue(userLocation);
-        oUserLocation=location;
+        //oUserLocation=location;
+        setUserLocation(location);
 
         //Track if you have come near to a person who needs help
         for(final HelpListUser user:maintainer.getUsers()){
@@ -226,6 +240,7 @@ public class LocationService extends Service {
     public static synchronized Location getUserLocation(){
         return oUserLocation;
     }
+    public static synchronized void setUserLocation(Location location){oUserLocation=location;}
 
     public static synchronized void track(String name,String phone,Location location,Context context){
 
@@ -270,6 +285,24 @@ public class LocationService extends Service {
                 Log.d("TRACKER","Distance is:"+getUserLocation().distanceTo(location));
             }
         }
+
+    }
+
+    @Override
+    public void onConnected(@Nullable Bundle bundle) throws SecurityException {
+        Location mLastLocation = LocationServices.FusedLocationApi.getLastLocation(googleApiClient);
+        if (mLastLocation != null) {
+            setUserLocation(mLastLocation);
+        }
+    }
+
+    @Override
+    public void onConnectionSuspended(int i) {
+
+    }
+
+    @Override
+    public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
 
     }
 }
