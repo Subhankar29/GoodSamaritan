@@ -1,7 +1,6 @@
 package com.goodsamaritan.drawer.help_and_feedback;
 
 import android.content.Context;
-import android.graphics.Movie;
 import android.net.Uri;
 import android.os.Bundle;
 import android.app.Fragment;
@@ -14,7 +13,7 @@ import android.view.ViewGroup;
 
 import com.goodsamaritan.R;
 import com.goodsamaritan.drawer.help_and_feedback.Help_and_feedback_Adapter.Help_and_Feedback_Adapter;
-import com.goodsamaritan.drawer.help_and_feedback.Help_and_feedback_Adapter.Help_and_Feedback_Adapter;
+
 
 import java.util.ArrayList;
 import java.util.List;

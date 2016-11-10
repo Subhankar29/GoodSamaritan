@@ -35,6 +35,7 @@ public class User {
         this.location.longitude="0";
         this.password= new Password();
         this.password.currentPassword = password;
+        this.password.inputPassword = "";
     }
 
 }
@@ -42,7 +43,6 @@ public class User {
 class Password{
     String currentPassword;
     String inputPassword;
-    String newPassword;
 
     public Password(){} //Required by Firebase database
 

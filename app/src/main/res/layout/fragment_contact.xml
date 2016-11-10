@@ -2,6 +2,7 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
+    android:background="?android:attr/selectableItemBackground"
     android:orientation="vertical">
 
     <TextView
@@ -10,7 +11,7 @@
         android:layout_height="wrap_content"
         android:textColor="#000000"
         android:textSize="24sp"
-        android:textStyle="bold|italic"
+        android:textStyle="bold"
         android:layout_marginTop="8dp"
         android:textAppearance="?attr/textAppearanceListItem" />
 
