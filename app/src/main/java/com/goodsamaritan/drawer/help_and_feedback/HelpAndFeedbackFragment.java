@@ -1,14 +1,23 @@
 package com.goodsamaritan.drawer.help_and_feedback;
 
 import android.content.Context;
+import android.graphics.Movie;
 import android.net.Uri;
 import android.os.Bundle;
 import android.app.Fragment;
+import android.support.v7.widget.DefaultItemAnimator;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
 import com.goodsamaritan.R;
+import com.goodsamaritan.drawer.help_and_feedback.Help_and_feedback_Adapter.Help_and_Feedback_Adapter;
+import com.goodsamaritan.drawer.help_and_feedback.Help_and_feedback_Adapter.Help_and_Feedback_Adapter;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -18,11 +27,17 @@ import com.goodsamaritan.R;
  * Use the {@link HelpAndFeedbackFragment#newInstance} factory method to
  * create an instance of this fragment.
  */
+
+
 public class HelpAndFeedbackFragment extends Fragment {
     // TODO: Rename parameter arguments, choose names that match
     // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
     private static final String ARG_PARAM1 = "param1";
     private static final String ARG_PARAM2 = "param2";
+
+    private List<Help_and_feedback> help_and_feedbacks_List = new ArrayList<>();
+    private RecyclerView recyclerView;
+    private Help_and_Feedback_Adapter mAdapter;
 
     // TODO: Rename and change types of parameters
     private String mParam1;
@@ -64,8 +79,33 @@ public class HelpAndFeedbackFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
+
+        View view = inflater.inflate(R.layout.fragment_help_and_feedback, container, false);
+        recyclerView = (RecyclerView) view.findViewById(R.id.recycler_view);
+
+        mAdapter = new Help_and_Feedback_Adapter(help_and_feedbacks_List);
+        RecyclerView.LayoutManager mLayoutManager = new LinearLayoutManager(getActivity().getApplicationContext());
+        recyclerView.setLayoutManager(mLayoutManager);
+        recyclerView.setItemAnimator(new DefaultItemAnimator());
+        recyclerView.setAdapter(mAdapter);recyclerView = (RecyclerView) view.findViewById(R.id.recycler_view);
+        prepareHelpandFeedbackData();
+
+
         // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_help_and_feedback, container, false);
+        return view;
+    }
+
+    private void prepareHelpandFeedbackData() {
+        Help_and_feedback h1 = new Help_and_feedback("About");
+        help_and_feedbacks_List.add(h1);
+        Help_and_feedback h2 = new Help_and_feedback("FAQ's");
+        help_and_feedbacks_List.add(h2);
+        Help_and_feedback h3 = new Help_and_feedback("Terms and Pivacy Policy");
+        help_and_feedbacks_List.add(h3);
+        Help_and_feedback h4 = new Help_and_feedback("Contact us");
+        help_and_feedbacks_List.add(h4);
+
+        mAdapter.notifyDataSetChanged();
     }
 
     // TODO: Rename method, update argument and hook method into UI event
