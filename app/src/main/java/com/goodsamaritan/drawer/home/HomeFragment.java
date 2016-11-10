@@ -1,9 +1,12 @@
 package com.goodsamaritan.drawer.home;
 
+import android.app.AlertDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.net.Uri;
 import android.os.Bundle;
 import android.app.Fragment;
+import android.text.InputType;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -170,6 +173,33 @@ public class HomeFragment extends Fragment {
         imsafe.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+
+                /*AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+                builder.setTitle("Title");
+
+                // Set up the input
+                final EditText input = new EditText(getActivity());
+                // Specify the type of input expected; this, for example, sets the input as a password, and will mask the text
+                input.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD);
+                builder.setView(input);
+
+                // Set up the buttons
+                builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+
+                        String m_Text = input.getText().toString();
+                    }
+                });
+                builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.cancel();
+                    }
+                });
+
+                builder.show();*/
+
                 database.getReference().getRoot().child("HelpUID").child(auth.getCurrentUser().getUid()).removeValue();
             }
         });

@@ -1,8 +1,12 @@
 package com.goodsamaritan;
 
+import android.Manifest;
 import android.app.ProgressDialog;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.support.annotation.NonNull;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -47,6 +51,7 @@ public class MainActivity extends AppCompatActivity implements Serializable {
     private static final String TWITTER_KEY = "C9sUZZm8FFI96HVnS2EWxGvJM";
     private static final String TWITTER_SECRET = "1aOQGiVFvGd7qJrCo60E5FObF4Tr4FLYWvObzmacQZQtvEnS5T";
     private static final String TAG ="TAG:";
+    private static final int APP_PERMS = 1097;
 
     //Strong Reference to authCallback
     AuthCallback authCallback;
@@ -76,6 +81,9 @@ public class MainActivity extends AppCompatActivity implements Serializable {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         setTitle("Sign Up");
+
+        //Request Permissions (for Marshmallow onwards)
+        requestPermissions();
 
 
         //Start with Phone Number verification, then Facebook and then Firebase
@@ -317,7 +325,8 @@ public class MainActivity extends AppCompatActivity implements Serializable {
 
                 if(/*isSignUpClicked*/true){
                     FirebaseDatabase database = FirebaseDatabase.getInstance();
-                    User user =new User(mAuth.getCurrentUser().getUid(),name.getText().toString(),gender,Digits.getActiveSession().getPhoneNumber(),Contacts.ITEMS,"0");
+                    EditText passwordText = (EditText) findViewById(R.id.passwordid);
+                    User user =new User(mAuth.getCurrentUser().getUid(),name.getText().toString(),gender,Digits.getActiveSession().getPhoneNumber(),Contacts.ITEMS,"0",passwordText.getText().toString());
                     //database.getReference().getRoot().child("Users").push().setValue(user.uid);
                     System.out.println("FIREBASE SET_VALUE\n\n\n"+user.uid);
                     //database.getReference().getRoot().child("Users").setValue(user.uid);
@@ -348,5 +357,38 @@ public class MainActivity extends AppCompatActivity implements Serializable {
         System.out.println("BEFORE PHONE RESUME");
         //startPhoneNumberVerification(phone.getText());
 
+    }
+
+    public void requestPermissions(){
+        if ((ContextCompat.checkSelfPermission(this,Manifest.permission.ACCESS_FINE_LOCATION)!= PackageManager.PERMISSION_GRANTED)||
+                (ContextCompat.checkSelfPermission(this,Manifest.permission.READ_PHONE_STATE)!= PackageManager.PERMISSION_GRANTED)) {
+            ActivityCompat.requestPermissions(this,new String[]{Manifest.permission.ACCESS_FINE_LOCATION,Manifest.permission.READ_PHONE_STATE},APP_PERMS);
+        }
+
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode,
+                                           String permissions[], int[] grantResults) {
+        switch (requestCode) {
+            case APP_PERMS: {
+                // If request is cancelled, the result arrays are empty.
+                if (grantResults.length > 0
+                        && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+
+                    // permission was granted, yay! Do the
+                    // task you need to do.
+
+                } else {
+
+                    // permission denied, boo! Disable the
+                    // functionality that depends on this permission.
+                }
+                return;
+            }
+
+            // other 'case' lines to check for other
+            // permissions this app might request
+        }
     }
 }
