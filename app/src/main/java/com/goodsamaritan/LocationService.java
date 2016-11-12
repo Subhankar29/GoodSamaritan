@@ -49,6 +49,8 @@ public class LocationService extends Service implements
     //Google API Client for getting last known location
     GoogleApiClient googleApiClient;
 
+    private static HelperListMaintainer helperListMaintainer;
+
 
     public LocationService() {
     }
@@ -133,6 +135,10 @@ public class LocationService extends Service implements
         //Obtain list of HelpUsers
         maintainer = new HelpListMaintainer(eventHandler,this);
 
+        //Obtain list of Helpers
+        Log.d(TAG,"Obtain helpers");
+        helperListMaintainer = new HelperListMaintainer(eventHandler,this);
+
 
         myphone=intent.getStringExtra("com.goodsamaritan.myphone");
 
@@ -195,7 +201,7 @@ public class LocationService extends Service implements
                 @Override
                 public void run() {
                     Log.d("LOCATIONSERVICE","Location changed! "+user.getUName()+" "+user.getUPhone());
-                    LocationService.track(user.getUName(),user.getUPhone(),user.getULocation(),LocationService.this);
+                    LocationService.track(user.getUName(),user.getUPhone(),user.getULocation(),user.getUID(),LocationService.this);
                 }
             }, SystemClock.uptimeMillis());
         }
@@ -242,7 +248,7 @@ public class LocationService extends Service implements
     }
     public static synchronized void setUserLocation(Location location){oUserLocation=location;}
 
-    public static synchronized void track(String name,String phone,Location location,Context context){
+    public static synchronized void track(String name,String phone,Location location,String uid,Context context){
 
         if(name==null||phone==null||location==null||getUserLocation()==null){
             Log.e("TRACKER","Objects either not initialized or destroyed!");
@@ -250,11 +256,14 @@ public class LocationService extends Service implements
         } else{
             if((getUserLocation().distanceTo(location)<=500) && !(phone.equals(myphone))){
 
+                Log.d("PHONE",phone+" "+myphone);
+
                 Intent mainScreen = new Intent(context,MainScreenActivity.class);
                 mainScreen.putExtra("com.goodsamaritan.name",name)
                         .putExtra("com.goodsamaritan.phone",phone)
                         .putExtra("com.goodsamaritan.location",location)
-                        .putExtra("com.goodsamaritan.startMaps",true);
+                        .putExtra("com.goodsamaritan.startMaps",true)
+                        .putExtra("com.goodsamaritan.uid",uid);
                 mainScreen.setData(Uri.parse(name+phone+location));
                 PendingIntent intent = PendingIntent.getActivity(context, 1,mainScreen, PendingIntent.FLAG_UPDATE_CURRENT);
 
@@ -305,4 +314,5 @@ public class LocationService extends Service implements
     public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
 
     }
+
 }

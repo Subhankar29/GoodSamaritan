@@ -86,7 +86,7 @@ public class HelpAndFeedbackFragment extends Fragment {
         RecyclerView.LayoutManager mLayoutManager = new LinearLayoutManager(getActivity().getApplicationContext());
         recyclerView.setLayoutManager(mLayoutManager);
         recyclerView.setItemAnimator(new DefaultItemAnimator());
-        recyclerView.setAdapter(mAdapter);recyclerView = (RecyclerView) view.findViewById(R.id.recycler_view);
+        recyclerView.setAdapter(mAdapter);
         prepareHelpandFeedbackData();
 
 

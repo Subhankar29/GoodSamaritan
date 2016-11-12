@@ -139,7 +139,12 @@ public class MainScreenActivity extends AppCompatActivity
             Uri gmmIntentUri = Uri.parse("google.navigation:q="+location.getLatitude()+","+location.getLongitude());
             Intent mapIntent = new Intent(Intent.ACTION_VIEW, gmmIntentUri);
             mapIntent.setPackage("com.google.android.apps.maps");
-            getIntent().removeExtra("com.goodsamaritan.startMaps");  //Required, else this block will launch the Maps intent everytime,
+            getIntent().removeExtra("com.goodsamaritan.startMaps");  //Required, else this block will launch the Maps intent everytime.
+
+            //Inform the victim you're ready to help.
+           Log.d("HELPERSERVICE",getIntent().getStringExtra("com.goodsamaritan.uid"));
+            database.getReference().child("Users").child(getIntent().getStringExtra("com.goodsamaritan.uid")).child("helpers").child(auth.getCurrentUser().getUid()).setValue("");
+
             startActivity(mapIntent);
 
         }

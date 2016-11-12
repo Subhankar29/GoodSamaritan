@@ -6,6 +6,9 @@ import android.content.DialogInterface;
 import android.net.Uri;
 import android.os.Bundle;
 import android.app.Fragment;
+import android.os.Handler;
+import android.os.HandlerThread;
+import android.support.annotation.NonNull;
 import android.text.InputType;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
@@ -16,11 +19,16 @@ import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
+import android.widget.Toast;
 
+import com.goodsamaritan.HelperListMaintainer;
 import com.goodsamaritan.R;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
@@ -45,6 +53,8 @@ public class HomeFragment extends Fragment {
     private String mParam2;
 
     private OnHomeInteractionListener mListener;
+
+    private HelperListMaintainer helperListMaintainer;
 
     public HomeFragment() {
         // Required empty public constructor
@@ -165,6 +175,12 @@ public class HomeFragment extends Fragment {
             @Override
             public void onClick(View v) {
                 database.getReference().getRoot().child("HelpUID").child(auth.getCurrentUser().getUid()).setValue(((EditText) getView().findViewById(R.id.help_message)).getText().toString());
+
+                //Add listener for users ready to help
+                //Maybe we'll need to put this in background thread.
+                /*HandlerThread eventHandlerThread = new HandlerThread("Helpers");
+                Handler eventHandler = new Handler(eventHandlerThread.getLooper());
+                helperListMaintainer = new HelperListMaintainer(eventHandler,getActivity());*/
             }
         });
 
@@ -174,8 +190,8 @@ public class HomeFragment extends Fragment {
             @Override
             public void onClick(View v) {
 
-                /*AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
-                builder.setTitle("Title");
+                AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+                builder.setTitle("Enter Password");
 
                 // Set up the input
                 final EditText input = new EditText(getActivity());
@@ -186,9 +202,30 @@ public class HomeFragment extends Fragment {
                 // Set up the buttons
                 builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
                     @Override
-                    public void onClick(DialogInterface dialog, int which) {
-
+                    public void onClick(final DialogInterface dialog, int which) {
                         String m_Text = input.getText().toString();
+                        database.getReference().getRoot().child("Users").child(auth.getCurrentUser().getUid()).child("password").child("inputPassword").setValue(m_Text).addOnSuccessListener(new OnSuccessListener<Void>() {
+                            @Override
+                            public void onSuccess(Void aVoid) {
+                                database.getReference().getRoot().child("HelpUID").child(auth.getCurrentUser().getUid()).removeValue().addOnSuccessListener(new OnSuccessListener<Void>() {
+                                    @Override
+                                    public void onSuccess(Void aVoid) {
+                                        Toast.makeText(getActivity(),"Successfully removed.",Toast.LENGTH_LONG).show();
+
+                                        //App must remove the correct password entry on every successful authentication.
+                                        database.getReference().getRoot().child("Users").child(auth.getCurrentUser().getUid()).child("password").child("inputPassword").setValue("");
+                                        dialog.dismiss();
+                                    }
+                                }).addOnFailureListener(new OnFailureListener() {
+                                    @Override
+                                    public void onFailure(@NonNull Exception e) {
+                                        Toast.makeText(getActivity(),"Error removing you from list.",Toast.LENGTH_LONG).show();
+                                        dialog.dismiss();
+                                    }
+                                });
+                            }
+                        });
+
                     }
                 });
                 builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
@@ -198,9 +235,9 @@ public class HomeFragment extends Fragment {
                     }
                 });
 
-                builder.show();*/
+                builder.show();
 
-                database.getReference().getRoot().child("HelpUID").child(auth.getCurrentUser().getUid()).removeValue();
+
             }
         });
     }
