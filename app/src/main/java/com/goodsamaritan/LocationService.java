@@ -315,4 +315,8 @@ public class LocationService extends Service implements
 
     }
 
+    public synchronized static HelperListMaintainer getMaintainer(){
+        return helperListMaintainer;
+    }
+
 }

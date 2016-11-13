@@ -82,6 +82,8 @@ public class HelperListUser{
         return phone;
     }
 
+    public synchronized String getUID(){ return uid;}
+
     public synchronized boolean isReady(){
         if(name==null||phone==null)return false;
         return true;

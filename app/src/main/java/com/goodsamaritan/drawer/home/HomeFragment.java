@@ -9,19 +9,25 @@ import android.app.Fragment;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.support.annotation.NonNull;
+import android.support.v7.widget.DefaultItemAnimator;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.text.InputType;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.WindowManager;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.PopupWindow;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.goodsamaritan.HelperListMaintainer;
+import com.goodsamaritan.LocationService;
 import com.goodsamaritan.R;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
@@ -55,6 +61,11 @@ public class HomeFragment extends Fragment {
     private OnHomeInteractionListener mListener;
 
     private HelperListMaintainer helperListMaintainer;
+
+    private HelperPopupAdapter helperPopupAdapter;
+    private RecyclerView recyclerView;
+
+    private Button imsafe;
 
     public HomeFragment() {
         // Required empty public constructor
@@ -185,7 +196,7 @@ public class HomeFragment extends Fragment {
         });
 
         //Listener for Safe Button
-        Button imsafe = (Button) getView().findViewById(R.id.imsafe);
+        imsafe = (Button) getView().findViewById(R.id.imsafe);
         imsafe.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -203,6 +214,7 @@ public class HomeFragment extends Fragment {
                 builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(final DialogInterface dialog, int which) {
+                        //Code to remove user from the list
                         String m_Text = input.getText().toString();
                         database.getReference().getRoot().child("Users").child(auth.getCurrentUser().getUid()).child("password").child("inputPassword").setValue(m_Text).addOnSuccessListener(new OnSuccessListener<Void>() {
                             @Override
@@ -215,6 +227,9 @@ public class HomeFragment extends Fragment {
                                         //App must remove the correct password entry on every successful authentication.
                                         database.getReference().getRoot().child("Users").child(auth.getCurrentUser().getUid()).child("password").child("inputPassword").setValue("");
                                         dialog.dismiss();
+
+                                        //Start Popup Window
+                                        startPopupWindow();
                                     }
                                 }).addOnFailureListener(new OnFailureListener() {
                                     @Override
@@ -247,5 +262,32 @@ public class HomeFragment extends Fragment {
             InputMethodManager inputMethodManager = (InputMethodManager) getActivity().getSystemService(INPUT_METHOD_SERVICE);
             inputMethodManager.hideSoftInputFromWindow(getActivity().getCurrentFocus().getWindowToken(), 0);
         }
+    }
+
+    public void startPopupWindow(){
+        LayoutInflater inflater = (LayoutInflater) getActivity().getBaseContext().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+        final View popupView = inflater.inflate(R.layout.helper_popup_list,null);
+        recyclerView = (RecyclerView) popupView.findViewById(R.id.helper_recycler_view);
+
+        helperListMaintainer = LocationService.getMaintainer();
+        helperPopupAdapter = new HelperPopupAdapter(helperListMaintainer.getUsers());
+        RecyclerView.LayoutManager mLayoutManager = new LinearLayoutManager(getActivity().getApplicationContext());
+        recyclerView.setLayoutManager(mLayoutManager);
+        recyclerView.setItemAnimator(new DefaultItemAnimator());
+        recyclerView.setAdapter(helperPopupAdapter);
+
+        helperPopupAdapter.notifyDataSetChanged();
+
+        final PopupWindow popupWindow = new PopupWindow(popupView, WindowManager.LayoutParams.MATCH_PARENT, WindowManager.LayoutParams.MATCH_PARENT);
+        Button dismiss = (Button) popupView.findViewById(R.id.btn_dismiss);
+        dismiss.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                popupWindow.dismiss();
+            }
+        });
+
+        popupWindow.showAsDropDown(imsafe, 50, -30);
+
     }
 }
