@@ -245,6 +245,7 @@ public class MainActivity extends AppCompatActivity implements Serializable {
         pd.show();
 
         permissionNeeds= Arrays.asList("email","user_friends");
+        FacebookSdk.setApplicationId("193849254386118");
         FacebookSdk.sdkInitialize(MainActivity.this.getApplicationContext());
 
         FacebookSdk.addLoggingBehavior(LoggingBehavior.GRAPH_API_DEBUG_INFO);

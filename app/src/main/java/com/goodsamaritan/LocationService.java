@@ -64,7 +64,7 @@ public class LocationService extends Service implements
 
     private LocationManager locationManager;
     private final Criteria criteria = new Criteria();
-    private final static int minUpdateTime = 30000;
+    private final static int minUpdateTime = 1000*60*3;
     private final static int minUpdateDistance = 100;
     private static UserLocation userLocation;
     private static Location oUserLocation;

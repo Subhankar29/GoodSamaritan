@@ -21,6 +21,7 @@ import com.goodsamaritan.drawer.contacts.ContactsFragment;
 import com.goodsamaritan.drawer.contacts.Contacts;
 import com.goodsamaritan.drawer.home.HomeFragment;
 import com.goodsamaritan.drawer.help_and_feedback.HelpAndFeedbackFragment;
+import com.goodsamaritan.drawer.map.MapFragment;
 import com.goodsamaritan.drawer.settings.SettingsFragment;
 import com.goodsamaritan.drawer.profile.ProfileFragment;
 import com.google.firebase.auth.FirebaseAuth;
@@ -30,7 +31,7 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
 public class MainScreenActivity extends AppCompatActivity
-        implements NavigationView.OnNavigationItemSelectedListener,ContactsFragment.OnListFragmentInteractionListener,HomeFragment.OnHomeInteractionListener,HelpAndFeedbackFragment.OnHelpAndFeedbackInteractionListener,SettingsFragment.OnSettingsInteractionListener,ProfileFragment.OnProfileInteractionListener {
+        implements NavigationView.OnNavigationItemSelectedListener,ContactsFragment.OnListFragmentInteractionListener,HomeFragment.OnHomeInteractionListener,HelpAndFeedbackFragment.OnHelpAndFeedbackInteractionListener,SettingsFragment.OnSettingsInteractionListener,ProfileFragment.OnProfileInteractionListener,MapFragment.OnFragmentInteractionListener {
 
     FragmentManager manager;
     FirebaseAuth auth;
@@ -263,6 +264,9 @@ public class MainScreenActivity extends AppCompatActivity
             HelpAndFeedbackFragment helpAndFeedbackFragment = new HelpAndFeedbackFragment();
             manager.beginTransaction().replace(R.id.content_main_screen_layout,helpAndFeedbackFragment).commit();
 
+        } else if(id == R.id.dr_map){
+            MapFragment mapFragment = new MapFragment();
+            manager.beginTransaction().replace(R.id.content_main_screen_layout,mapFragment).commit();
         }
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
@@ -291,6 +295,11 @@ public class MainScreenActivity extends AppCompatActivity
 
     @Override
     public void onProfileInteraction(Uri uri) {
+
+    }
+
+    @Override
+    public void onMapInteraction(Uri uri) {
 
     }
 }

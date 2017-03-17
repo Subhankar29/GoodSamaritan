@@ -22,6 +22,10 @@
             android:id="@+id/help_and_fb"
             android:icon="@drawable/img_help_and_fb"
             android:title="@string/help_feedback" />
+        <item
+            android:id="@+id/dr_map"
+            android:icon="@drawable/img_map"
+            android:title="@string/map" />
     </group>
 
 

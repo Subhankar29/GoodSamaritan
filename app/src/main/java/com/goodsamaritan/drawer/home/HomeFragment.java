@@ -3,6 +3,7 @@ package com.goodsamaritan.drawer.home;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
 import android.app.Fragment;
@@ -66,6 +67,7 @@ public class HomeFragment extends Fragment {
     private RecyclerView recyclerView;
 
     private Button imsafe;
+    private Button help_me;
 
     public HomeFragment() {
         // Required empty public constructor
@@ -181,7 +183,7 @@ public class HomeFragment extends Fragment {
         });
 
         //Listener for Help Button
-        Button help_me = (Button) getView().findViewById(R.id.help_me);
+        help_me = (Button) getView().findViewById(R.id.help_me);
         help_me.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -278,16 +280,19 @@ public class HomeFragment extends Fragment {
 
         helperPopupAdapter.notifyDataSetChanged();
 
-        final PopupWindow popupWindow = new PopupWindow(popupView, WindowManager.LayoutParams.MATCH_PARENT, WindowManager.LayoutParams.MATCH_PARENT);
+        final PopupWindow popupWindow = new PopupWindow(popupView, WindowManager.LayoutParams.MATCH_PARENT, 240);
         Button dismiss = (Button) popupView.findViewById(R.id.btn_dismiss);
         dismiss.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 popupWindow.dismiss();
+                getActivity().getWindow().clearFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
             }
         });
 
-        popupWindow.showAsDropDown(imsafe, 50, -30);
+        popupView.setBackgroundColor(Color.CYAN);
+        getActivity().getWindow().setFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE,WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
+        popupWindow.showAsDropDown(help_me, 50, -100);
 
     }
 }
