@@ -136,6 +136,8 @@ public class MainActivity extends AppCompatActivity implements Serializable {
     succeeds or fails, users have full right to write any phone number to the database once
     authenticated with Facebook ID. This is client side authentication and should be replaced with
     server side authentication in future to mitigate this problem.
+    Update: Migration from Digits to Firebase Phone Authentication required before September 30 2017.
+    This will also mitigate the above problem.
      */
     void startPhoneNumberVerification(CharSequence phoneNumber){
 
@@ -362,8 +364,8 @@ public class MainActivity extends AppCompatActivity implements Serializable {
 
     public void requestPermissions(){
         if ((ContextCompat.checkSelfPermission(this,Manifest.permission.ACCESS_FINE_LOCATION)!= PackageManager.PERMISSION_GRANTED)||
-                (ContextCompat.checkSelfPermission(this,Manifest.permission.READ_PHONE_STATE)!= PackageManager.PERMISSION_GRANTED)) {
-            ActivityCompat.requestPermissions(this,new String[]{Manifest.permission.ACCESS_FINE_LOCATION,Manifest.permission.READ_PHONE_STATE},APP_PERMS);
+                (ContextCompat.checkSelfPermission(this,Manifest.permission.READ_PHONE_STATE)!= PackageManager.PERMISSION_GRANTED)|| (ContextCompat.checkSelfPermission(this,Manifest.permission.READ_CONTACTS)!= PackageManager.PERMISSION_GRANTED)) {
+            ActivityCompat.requestPermissions(this,new String[]{Manifest.permission.ACCESS_FINE_LOCATION,Manifest.permission.READ_PHONE_STATE,Manifest.permission.READ_CONTACTS},APP_PERMS);
         }
 
     }

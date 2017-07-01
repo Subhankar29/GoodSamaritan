@@ -23,10 +23,10 @@ public class Help_and_Feedback_Adapter extends RecyclerView.Adapter<Help_and_Fee
 
     private List<Help_and_feedback> help_and_feedbacks_List;
 
-    public class MyViewHolder extends RecyclerView.ViewHolder {
+    class MyViewHolder extends RecyclerView.ViewHolder {
         public TextView title;
 
-        public MyViewHolder(View view) {
+        MyViewHolder(View view) {
             super(view);
             title = (TextView) view.findViewById(R.id.title);
         }

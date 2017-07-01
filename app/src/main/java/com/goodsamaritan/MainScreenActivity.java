@@ -16,6 +16,9 @@ import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.TextView;
+//import android.provider.ContactsContract.Contacts; Only for reference. Cannot be imported as there's another Contacts already!
+import android.provider.ContactsContract.CommonDataKinds.Email;
+
 
 import com.goodsamaritan.drawer.contacts.ContactsFragment;
 import com.goodsamaritan.drawer.contacts.Contacts;
@@ -30,12 +33,18 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
+import java.util.Iterator;
+import java.util.Set;
+
 public class MainScreenActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener,ContactsFragment.OnListFragmentInteractionListener,HomeFragment.OnHomeInteractionListener,HelpAndFeedbackFragment.OnHelpAndFeedbackInteractionListener,SettingsFragment.OnSettingsInteractionListener,ProfileFragment.OnProfileInteractionListener,MapFragment.OnFragmentInteractionListener {
 
     FragmentManager manager;
     FirebaseAuth auth;
     FirebaseDatabase database;
+
+    private static final int CONTACT_PICKER_RESULT = 1001;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -215,6 +224,16 @@ public class MainScreenActivity extends AppCompatActivity
         }*/
     }
 
+    public void doLaunchContactPicker() {
+        /*Intent contactPickerIntent = new Intent(Intent.ACTION_PICK,
+                android.provider.ContactsContract.Contacts.CONTENT_URI);
+        startActivityForResult(contactPickerIntent, CONTACT_PICKER_RESULT);*/
+
+        //Beta Multiple Contacts
+        Intent contactPickerInt = new Intent(MainScreenActivity.this,ContactsPickerActivity.class);
+        startActivity(contactPickerInt);
+    }
+
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
@@ -232,9 +251,30 @@ public class MainScreenActivity extends AppCompatActivity
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_settings) {
             return true;
+        } else if(id == R.id.action_person_add){
+            doLaunchContactPicker();
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        Log.d("RESULT","Reached");
+
+        if(resultCode == RESULT_OK){
+            /*Bundle extras = data.getExtras();
+            Set keys = extras.keySet();
+            Iterator iterate = keys.iterator();
+            while (iterate.hasNext()) {
+                String key = (String) iterate.next();
+                Log.v("PERSON_ADD", key + "[" + extras.get(key) + "]");
+            }*/
+            Uri result = data.getData();
+            Log.v("PERSON_ADD", "Got a result: "
+                    + result.toString());
+        }
     }
 
     @SuppressWarnings("StatementWithEmptyBody")

@@ -18,11 +18,6 @@ public class Contacts {
      */
     public static final List<ContactItem> ITEMS = new ArrayList<ContactItem>();
 
-    /**
-     * A map of sample (dummy) items, by ID.
-     */
-    public static final Map<String, ContactItem> ITEM_MAP = new HashMap<String, ContactItem>();
-
     private static final int COUNT = 25;
 
     static {
