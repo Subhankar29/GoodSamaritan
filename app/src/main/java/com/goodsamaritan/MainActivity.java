@@ -75,6 +75,7 @@ public class MainActivity extends AppCompatActivity implements Serializable {
     //Is Sign Up clicked
     boolean isSignUpClicked=false;
 
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         pd=new ProgressDialog(this);
@@ -89,6 +90,7 @@ public class MainActivity extends AppCompatActivity implements Serializable {
         //Start with Phone Number verification, then Facebook and then Firebase
         //In future, will check Firebase database to verify if new or old account.
         final EditText phone = (EditText) findViewById(R.id.phoneid);
+        Button otp = (Button) findViewById(R.id.send_otp);
         System.out.println("BEFORE PHONE");
 
 
@@ -208,6 +210,7 @@ public class MainActivity extends AppCompatActivity implements Serializable {
                         // ...
                     }
                 });
+
     }
 
     void authenticateFirebase(){
