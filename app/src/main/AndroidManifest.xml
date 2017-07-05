@@ -38,6 +38,7 @@
             android:label="@string/app_name"
             android:theme="@style/FullyTranslucent"
             tools:replace="android:theme"/>
+        <meta-data android:name="com.facebook.sdk.ApplicationId" android:value="193849254386118"/>
         <activity
             android:name=".SplashActivity"
             android:theme="@style/SplashTheme">

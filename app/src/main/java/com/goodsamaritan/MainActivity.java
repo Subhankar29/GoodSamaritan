@@ -4,7 +4,10 @@ import android.Manifest;
 import android.app.ProgressDialog;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.graphics.drawable.Animatable;
+import android.graphics.drawable.AnimationDrawable;
 import android.support.annotation.NonNull;
+import android.support.graphics.drawable.AnimatedVectorDrawableCompat;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
@@ -13,6 +16,7 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
 import android.widget.Toast;
@@ -29,11 +33,16 @@ import com.facebook.login.LoginResult;
 import com.goodsamaritan.drawer.contacts.Contacts;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
+import com.google.firebase.FirebaseException;
+import com.google.firebase.FirebaseTooManyRequestsException;
 import com.google.firebase.auth.AuthCredential;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FacebookAuthProvider;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.auth.PhoneAuthCredential;
+import com.google.firebase.auth.PhoneAuthProvider;
 import com.google.firebase.database.FirebaseDatabase;
 import com.twitter.sdk.android.core.TwitterAuthConfig;
 import com.twitter.sdk.android.core.TwitterCore;
@@ -41,6 +50,7 @@ import com.twitter.sdk.android.core.TwitterCore;
 import java.io.Serializable;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import io.fabric.sdk.android.Fabric;
 
@@ -64,7 +74,10 @@ public class MainActivity extends AppCompatActivity implements Serializable {
     //Firebase Variables
     private FirebaseAuth mAuth;
     private FirebaseAuth.AuthStateListener mAuthListener;
-    private FirebaseDatabase firebaseDatabase;
+    private PhoneAuthProvider.OnVerificationStateChangedCallbacks phoneVerificationCallback;
+    private PhoneAuthCredential phoneAuthCredential;
+    private String phoneVerificationId;
+    private boolean isPhoneVerified = false;
 
     //Progress Dialog
     ProgressDialog pd;
@@ -72,8 +85,11 @@ public class MainActivity extends AppCompatActivity implements Serializable {
     //Verification Status Flag
     boolean isComplete=false;
 
-    //Is Sign Up clicked
-    boolean isSignUpClicked=false;
+    //Is Verify clicked
+    boolean isVerifyClicked=false;
+
+    //Offset for password image.
+    int offset=144;
 
 
     @Override
@@ -90,11 +106,87 @@ public class MainActivity extends AppCompatActivity implements Serializable {
         //Start with Phone Number verification, then Facebook and then Firebase
         //In future, will check Firebase database to verify if new or old account.
         final EditText phone = (EditText) findViewById(R.id.phoneid);
-        Button otp = (Button) findViewById(R.id.send_otp);
+        Button otpButton = (Button) findViewById(R.id.send_otp);
+        mAuth = FirebaseAuth.getInstance();
         System.out.println("BEFORE PHONE");
+        //((Animatable)((ImageView) findViewById(R.id.checkid)).getDrawable()).start();
+
+        phoneVerificationCallback = new PhoneAuthProvider.OnVerificationStateChangedCallbacks() {
+            @Override
+            public void onVerificationCompleted(PhoneAuthCredential phoneAuthCredential) {
+                MainActivity.this.phoneAuthCredential = phoneAuthCredential;
+                Toast.makeText(MainActivity.this,"Phone number verified",Toast.LENGTH_SHORT).show();
+                Log.d("PHONE VERIFICATION","Verified without any otp.");
+                signInWithPhone();
+            }
+
+            @Override
+            public void onVerificationFailed(FirebaseException e) {
+                // This callback is invoked in an invalid request for verification is made,
+                // for instance if the the phone number format is not valid.
+                Log.w(TAG, "onVerificationFailed", e);
+
+                if (e instanceof FirebaseAuthInvalidCredentialsException) {
+                    // Invalid request
+                    // ...
+                } else if (e instanceof FirebaseTooManyRequestsException) {
+                    // The SMS quota for the project has been exceeded
+                    // ...
+                }
+
+                // Show a message and update the UI
+                // ...
+            }
+
+            @Override
+            public void onCodeSent(String verificationId,
+                                   PhoneAuthProvider.ForceResendingToken token) {
+                // The SMS verification code has been sent to the provided phone number, we
+                // now need to ask the user to enter the code and then construct a credential
+                // by combining the code with a verification ID.
+                Log.d(TAG, "onCodeSent:" + verificationId);
 
 
-        startPhoneNumberVerification(phone.getText());
+                EditText verifyOTP = (EditText) findViewById(R.id.verify);
+                verifyOTP.setVisibility(View.VISIBLE);
+                findViewById(R.id.img_password).animate().translationYBy(offset);
+                offset=0;
+                findViewById(R.id.send_otp).setEnabled(false);
+                findViewById(R.id.verify_btn).setVisibility(View.VISIBLE);
+                MainActivity.this.phoneVerificationId = verificationId;
+                findViewById(R.id.verify_btn).setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        findViewById(R.id.verify_btn).setVisibility(View.GONE);
+                        isVerifyClicked=true;
+                        findViewById(R.id.progress_bar).setVisibility(View.VISIBLE);
+                        MainActivity.this.phoneAuthCredential = PhoneAuthProvider.getCredential(MainActivity.this.phoneVerificationId, ((EditText) findViewById(R.id.verify)).getText().toString());
+                        signInWithPhone();
+                    }
+                });
+
+                // ...
+            }
+
+            @Override
+            public void onCodeAutoRetrievalTimeOut(String verificationId){
+
+            }
+        };
+
+        otpButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                EditText phoneText = (EditText) findViewById(R.id.phoneid);
+                if(phoneText.getText().length()==0)phoneText.setError("Required!");
+                else {
+                    PhoneAuthProvider.getInstance().verifyPhoneNumber(phoneText.getText().toString(),60,TimeUnit.SECONDS,MainActivity.this,phoneVerificationCallback);
+                }
+            }
+        });
+
+        //startPhoneNumberVerification(phone.getText());
+
 
         Button sign_up_btn= (Button) findViewById(R.id.sign_up_btn);
         sign_up_btn.setOnClickListener(new View.OnClickListener() {
@@ -112,12 +204,13 @@ public class MainActivity extends AppCompatActivity implements Serializable {
                 else if(phoneText.getText().length()==0)phoneText.setError("Required!");
                 else if(passwordText.getText().length()==0)passwordText.setError("Required!");
                 else if(radioGroup.getCheckedRadioButtonId()==-1)radioFemale.setError("Required!");
+                else if(!isPhoneVerified)phoneText.setError("Please verify your phone number first.");
                 else {
-                    isSignUpClicked=true;
-                    //Start with Phone Number verification, then Facebook and then Firebase
 
-                    EditText phone = (EditText) findViewById(R.id.phoneid);
-                    startPhoneNumberVerification(phone.getText());
+                    //Start with Facebook and then Firebase
+
+                    facebookLogin();
+
 
                 }
 
@@ -125,64 +218,51 @@ public class MainActivity extends AppCompatActivity implements Serializable {
 
             }
         });
+
+        //Auto Login starts here:
+        Log.d("AUTO LOGIN","Started");
+        pd.setTitle("Authenticating");
+        pd.setMessage("Verifying Phone Number");
+        pd.setCancelable(false);
+        pd.show();
+        if(FirebaseAuth.getInstance().getCurrentUser()!=null)facebookLogin();/*authenticateFirebase();*/
+        else pd.hide();
     }
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
+        Log.d("FACEBOOK","Came back from Login Screen.");
         callbackManager.onActivityResult(requestCode, resultCode, data);
     }
 
-    /*
-    Note that this is a weak phone authentication method. Regardless of whether the authentication
-    succeeds or fails, users have full right to write any phone number to the database once
-    authenticated with Facebook ID. This is client side authentication and should be replaced with
-    server side authentication in future to mitigate this problem.
-    Update: Migration from Digits to Firebase Phone Authentication required before September 30 2017.
-    This will also mitigate the above problem.
-     */
-    void startPhoneNumberVerification(CharSequence phoneNumber){
-
-        pd.setTitle("Authenticating");
-        pd.setMessage("Verifying Phone Number");
-        pd.setCancelable(false);
-        pd.show();
-
-        //Initialize Digits Kit
-        TwitterAuthConfig authConfig = new TwitterAuthConfig(TWITTER_KEY, TWITTER_SECRET);
-        Fabric.with(this, new TwitterCore(authConfig), new Digits.Builder().build());
-
-        //Start Authentication Flow
-        authCallback = new AuthCallback() {
+    void signInWithPhone(){
+        mAuth.signInWithCredential(phoneAuthCredential).addOnCompleteListener(MainActivity.this, new OnCompleteListener<AuthResult>() {
             @Override
-            public void success(DigitsSession session, String phoneNumber) {
-                // TODO: associate the session userID with your user model
-                Toast.makeText(getApplicationContext(), "Authentication successful for "
-                        + phoneNumber, Toast.LENGTH_LONG).show();
+            public void onComplete(@NonNull Task<AuthResult> task) {
+                if(task.isSuccessful()){
+                    //When Verify Button is clicked only
+                    if(isVerifyClicked){
+                        findViewById(R.id.progress_bar).setVisibility(View.GONE);
+                        findViewById(R.id.checkid).setVisibility(View.VISIBLE);
+                        Log.d("CHECKID","before");
+                        ((Animatable)((ImageView) findViewById(R.id.checkid)).getDrawable()).start();
+                        Log.d("CHECKID","after");
+                    }
 
-                //Now Facebook Login
-                System.out.println("BEFORE FACEBOOK");
-                facebookLogin();
+                    //For all cases
+                    isPhoneVerified = true;
+                } else {
+                    if(isVerifyClicked){
+                        findViewById(R.id.checkid).setVisibility(View.GONE);
+                        ((EditText)findViewById(R.id.verify)).setError("Incorrect code.");
+                        findViewById(R.id.verify_btn).setVisibility(View.VISIBLE);
+
+                    }
+                    Toast.makeText(MainActivity.this,"Phone verification failed.\n Please try again.",Toast.LENGTH_LONG).show();
+                }
             }
-
-            @Override
-            public void failure(DigitsException exception) {
-                Log.d("Digits", "Sign in with Digits failure", exception);
-            }
-        };
-        AuthConfig.Builder authConfigBuilder = new AuthConfig.Builder()
-                .withAuthCallBack(authCallback)
-                .withPhoneNumber("+91"+phoneNumber);
-
-        System.out.print("HELLO_WORLD\nHELLO_WORLD\nHELLO_WORLD\nHELLO_WORLD\nHELLO_WORLD\nHELLO_WORLD\n");
-        System.out.println("Valid User?:"+(Digits.getActiveSession()==null));
-        if((Digits.getActiveSession()==null)&&isSignUpClicked){
-            Digits.authenticate(authConfigBuilder.build());
-        }
-        else if((Digits.getActiveSession()!=null))facebookLogin();
-        else pd.dismiss();
-
-
+        });
     }
 
     private void handleFacebookAccessToken(AccessToken token) {
@@ -191,18 +271,18 @@ public class MainActivity extends AppCompatActivity implements Serializable {
         Log.d(TAG, "handleFacebookAccessToken:" + token);
 
         AuthCredential credential = FacebookAuthProvider.getCredential(token.getToken());
-        mAuth.signInWithCredential(credential)
+        mAuth.getCurrentUser().linkWithCredential(credential)
                 .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
                     @Override
                     public void onComplete(@NonNull Task<AuthResult> task) {
-                        Log.d(TAG, "signInWithCredential:onComplete:" + task.isSuccessful());
+                        Log.d(TAG, "linkWithCredential:onComplete:" + task.isSuccessful());
 
                         // If sign in fails, display a message to the user. If sign in succeeds
                         // the auth state listener will be notified and logic to handle the
                         // signed in user can be handled in the listener.
                         authenticateFirebase();
-                        if (!task.isSuccessful()) {
-                            Log.w(TAG, "signInWithCredential", task.getException());
+                        if (!task.isSuccessful() && !task.getException().getMessage().contains("already been linked to the given provider")) {
+                            Log.w(TAG, "linkWithCredential", task.getException());
                             Toast.makeText(MainActivity.this, "Authentication failed.",
                                     Toast.LENGTH_SHORT).show();
                         }
@@ -234,7 +314,11 @@ public class MainActivity extends AppCompatActivity implements Serializable {
                 } else {
                     // User is signed out
                     Log.d(TAG, "onAuthStateChanged:signed_out");
-                    handleFacebookAccessToken(accessToken);
+                    if(phoneAuthCredential==null)Toast.makeText(MainActivity.this,"Please verify your phone.",Toast.LENGTH_LONG).show();
+                    else {
+                        signInWithPhone();
+                        facebookLogin();
+                    }
                 }
                 // ...
             }
@@ -244,6 +328,7 @@ public class MainActivity extends AppCompatActivity implements Serializable {
     }
 
     void facebookLogin(){
+        Log.d("FACEBOOK","Started Facebook verification.");
 
         pd.dismiss();
         pd.setMessage("Verifying Facebook Credentials");
@@ -251,13 +336,12 @@ public class MainActivity extends AppCompatActivity implements Serializable {
 
         permissionNeeds= Arrays.asList("email","user_friends");
         FacebookSdk.setApplicationId("193849254386118");
-        FacebookSdk.sdkInitialize(MainActivity.this.getApplicationContext());
+        FacebookSdk.sdkInitialize(MainActivity.this.getApplicationContext()); //Facebook SDK auto initializes on start. Still, it's called just in case...
 
         FacebookSdk.addLoggingBehavior(LoggingBehavior.GRAPH_API_DEBUG_INFO);
         FacebookSdk.addLoggingBehavior(LoggingBehavior.DEVELOPER_ERRORS);
         FacebookSdk.addLoggingBehavior(LoggingBehavior.INCLUDE_ACCESS_TOKENS);
         FacebookSdk.addLoggingBehavior(LoggingBehavior.INCLUDE_RAW_RESPONSES);
-        FacebookSdk.setApplicationId("193849254386118");
         FacebookSdk.setIsDebugEnabled(true);
 
         callbackManager = CallbackManager.Factory.create();
@@ -268,8 +352,9 @@ public class MainActivity extends AppCompatActivity implements Serializable {
                         // App code
                         //Toast.makeText(getApplicationContext(),"Success",Toast.LENGTH_LONG).show();
                         //System.out.println("1");
-                        //Connect to Firebase
+                        //Link Facebook with Phone
                         accessToken=loginResult.getAccessToken();
+                        handleFacebookAccessToken(accessToken);
 
                         //Now Firebase Login
                         System.out.println("BEFORE FIREBASE");
@@ -296,6 +381,9 @@ public class MainActivity extends AppCompatActivity implements Serializable {
     @Override
     protected void onStart() {
         super.onStart();
+
+        Log.d("GOOD SAMARITAN","Started.");
+
         Runnable runnable = new Runnable() {
             @Override
             public void run() {
@@ -329,17 +417,21 @@ public class MainActivity extends AppCompatActivity implements Serializable {
 
                 pd.dismiss();
 
+                //Diagnosis
+                for(String provider:FirebaseAuth.getInstance().getCurrentUser().getProviders())
+                    Log.d("FIREBASE USER:",provider);
+
                 if(/*isSignUpClicked*/true){
                     FirebaseDatabase database = FirebaseDatabase.getInstance();
                     EditText passwordText = (EditText) findViewById(R.id.passwordid);
-                    User user =new User(mAuth.getCurrentUser().getUid(),name.getText().toString(),gender,Digits.getActiveSession().getPhoneNumber(),Contacts.ITEMS,"0",passwordText.getText().toString());
+                    User user =new User(mAuth.getCurrentUser().getUid(),name.getText().toString(),gender,FirebaseAuth.getInstance().getCurrentUser().getPhoneNumber(),Contacts.ITEMS,"0",passwordText.getText().toString());
                     //database.getReference().getRoot().child("Users").push().setValue(user.uid);
                     System.out.println("FIREBASE SET_VALUE\n\n\n"+user.uid);
                     //database.getReference().getRoot().child("Users").setValue(user.uid);
                     database.getReference().getRoot().child("Users/"+user.uid+"/").setValue(user);
                 }
 
-                i.putExtra("com.goodsamaritan.myphone",Digits.getActiveSession().getPhoneNumber());
+                i.putExtra("com.goodsamaritan.myphone",FirebaseAuth.getInstance().getCurrentUser().getPhoneNumber());
                 startActivity(i);
             }
         };
@@ -352,6 +444,7 @@ public class MainActivity extends AppCompatActivity implements Serializable {
     protected void onStop() {
         super.onStop();
         if (mAuthListener != null) {
+            Log.d("GOOD SAMARITAN","Stopped");
             mAuth.removeAuthStateListener(mAuthListener);
         }
     }
@@ -360,7 +453,7 @@ public class MainActivity extends AppCompatActivity implements Serializable {
     protected void onResume() {
         super.onResume();
         EditText phone = (EditText) findViewById(R.id.phoneid);
-        System.out.println("BEFORE PHONE RESUME");
+        Log.d("GOOD SAMARITAN","Resummed");
         //startPhoneNumberVerification(phone.getText());
 
     }
