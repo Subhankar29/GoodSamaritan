@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.location.Location;
 import android.net.Uri;
 import android.os.Bundle;
+import android.provider.ContactsContract;
 import android.util.Log;
 import android.view.View;
 import android.support.design.widget.NavigationView;
@@ -32,13 +33,21 @@ import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
+import com.onegravity.contactpicker.contact.Contact;
+import com.onegravity.contactpicker.contact.ContactDescription;
+import com.onegravity.contactpicker.contact.ContactSortOrder;
+import com.onegravity.contactpicker.core.ContactPickerActivity;
+import com.onegravity.contactpicker.group.Group;
+import com.onegravity.contactpicker.picture.ContactPictureType;
 
 import java.util.Iterator;
+import java.util.List;
 import java.util.Set;
 
 public class MainScreenActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener,ContactsFragment.OnListFragmentInteractionListener,HomeFragment.OnHomeInteractionListener,HelpAndFeedbackFragment.OnHelpAndFeedbackInteractionListener,SettingsFragment.OnSettingsInteractionListener,ProfileFragment.OnProfileInteractionListener,MapFragment.OnFragmentInteractionListener {
 
+    private static final int REQUEST_CONTACT = 101;
     FragmentManager manager;
     FirebaseAuth auth;
     FirebaseDatabase database;
@@ -230,8 +239,17 @@ public class MainScreenActivity extends AppCompatActivity
         startActivityForResult(contactPickerIntent, CONTACT_PICKER_RESULT);*/
 
         //Beta Multiple Contacts
-        Intent contactPickerInt = new Intent(MainScreenActivity.this,ContactsPickerActivity.class);
-        startActivity(contactPickerInt);
+        //Intent contactPickerInt = new Intent(MainScreenActivity.this,ContactsPickerActivity.class);
+        //startActivity(contactPickerInt);
+
+        Intent intent = new Intent(this, ContactPickerActivity.class)
+                .putExtra(ContactPickerActivity.EXTRA_THEME, R.style.ContactPickerTheme)
+                .putExtra(ContactPickerActivity.EXTRA_CONTACT_BADGE_TYPE, ContactPictureType.ROUND.name())
+                .putExtra(ContactPickerActivity.EXTRA_SHOW_CHECK_ALL, true)
+                .putExtra(ContactPickerActivity.EXTRA_CONTACT_DESCRIPTION, ContactDescription.ADDRESS.name())
+                .putExtra(ContactPickerActivity.EXTRA_CONTACT_DESCRIPTION_TYPE, ContactsContract.CommonDataKinds.Email.TYPE_WORK)
+                .putExtra(ContactPickerActivity.EXTRA_CONTACT_SORT_ORDER, ContactSortOrder.AUTOMATIC.name());
+        startActivityForResult(intent, REQUEST_CONTACT);
     }
 
     @Override
@@ -262,18 +280,20 @@ public class MainScreenActivity extends AppCompatActivity
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         Log.d("RESULT","Reached");
+        if(requestCode == REQUEST_CONTACT){
+            if(resultCode == RESULT_OK){
+                List<Contact> contacts = (List<Contact>) data.getSerializableExtra(ContactPickerActivity.RESULT_CONTACT_DATA);
+                for (Contact contact : contacts) {
+                    // process the contacts...
+                    Log.d("RESULT","Got a contact.");
+                }
 
-        if(resultCode == RESULT_OK){
-            /*Bundle extras = data.getExtras();
-            Set keys = extras.keySet();
-            Iterator iterate = keys.iterator();
-            while (iterate.hasNext()) {
-                String key = (String) iterate.next();
-                Log.v("PERSON_ADD", key + "[" + extras.get(key) + "]");
-            }*/
-            Uri result = data.getData();
-            Log.v("PERSON_ADD", "Got a result: "
-                    + result.toString());
+                // process groups
+                List<Group> groups = (List<Group>) data.getSerializableExtra(ContactPickerActivity.RESULT_GROUP_DATA);
+                for (Group group : groups) {
+                    // process the groups...
+                }
+            }
         }
     }
 

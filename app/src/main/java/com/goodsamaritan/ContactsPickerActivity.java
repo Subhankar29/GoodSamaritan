@@ -5,7 +5,7 @@ import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
-
+//Deprecated. Using ContactPicker by 1gravity
 public class ContactsPickerActivity extends AppCompatActivity {
 
     private RecyclerView recyclerView;

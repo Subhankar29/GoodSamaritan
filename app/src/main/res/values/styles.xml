@@ -39,4 +39,15 @@
         <item name="android:visibility">gone</item>
     </style>
 
+    <style name="ContactPickerTheme" parent="@style/ContactPicker_Theme_Light">
+        <!-- ActionBarCompat -->
+        <item name="colorPrimary">@color/colorPrimary</item>
+        <item name="colorAccent">@color/colorAccent</item>
+        <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
+
+        <item name="android:colorBackground">@color/background_material_light</item>
+        <!--<item name="icTheme">@drawable/ic_palette_black_36dp</item>-->
+        <!--<item name="icPickContact">@drawable/ic_person_add_black_36dp</item>-->
+    </style>
+
 </resources>

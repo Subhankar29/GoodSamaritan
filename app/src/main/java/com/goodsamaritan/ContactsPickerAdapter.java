@@ -14,7 +14,7 @@ import android.provider.ContactsContract;
 import java.util.ArrayList;
 import java.util.List;
 
-
+//Deprecated. Using ContactPicker by 1gravity.
 /**
  * Created by mayank on 26/6/17.
  */
