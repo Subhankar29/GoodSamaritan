@@ -20,12 +20,8 @@ public class Contacts {
 
     private static final int COUNT = 25;
 
-    static {
-        // Add some sample items.
-        for (int i = 1; i <= COUNT; i++) {
-            addItem(createContactItem(i));
-        }
-    }
+
+
 
     private static void addItem(ContactItem item) {
         ITEMS.add(item);
@@ -46,7 +42,7 @@ public class Contacts {
     }
 
     /**
-     * A dummy item representing a piece of phone_number.
+     * Contact information
      */
     public static class ContactItem {
         public final String contact_name;

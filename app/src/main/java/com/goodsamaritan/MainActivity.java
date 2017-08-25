@@ -1,17 +1,14 @@
 package com.goodsamaritan;
-
 import android.Manifest;
 import android.app.ProgressDialog;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.drawable.Animatable;
-import android.graphics.drawable.AnimationDrawable;
+import android.os.Bundle;
 import android.support.annotation.NonNull;
-import android.support.graphics.drawable.AnimatedVectorDrawableCompat;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -20,8 +17,7 @@ import android.widget.ImageView;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
 import android.widget.Toast;
-import com.digits.sdk.android.*;
-import com.digits.sdk.android.Digits;
+import com.digits.sdk.android.AuthCallback;
 import com.facebook.AccessToken;
 import com.facebook.CallbackManager;
 import com.facebook.FacebookCallback;
@@ -44,22 +40,15 @@ import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.PhoneAuthCredential;
 import com.google.firebase.auth.PhoneAuthProvider;
 import com.google.firebase.database.FirebaseDatabase;
-import com.twitter.sdk.android.core.TwitterAuthConfig;
-import com.twitter.sdk.android.core.TwitterCore;
-
 import java.io.Serializable;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-import io.fabric.sdk.android.Fabric;
-
 
 public class MainActivity extends AppCompatActivity implements Serializable {
 
     // Note: Your consumer key and secret should be obfuscated in your source code before shipping.
-    private static final String TWITTER_KEY = "C9sUZZm8FFI96HVnS2EWxGvJM";
-    private static final String TWITTER_SECRET = "1aOQGiVFvGd7qJrCo60E5FObF4Tr4FLYWvObzmacQZQtvEnS5T";
     private static final String TAG ="TAG:";
     private static final int APP_PERMS = 1097;
 
@@ -90,6 +79,8 @@ public class MainActivity extends AppCompatActivity implements Serializable {
 
     //Offset for password image.
     int offset=144;
+
+    private boolean isSignUpClicked=false;
 
 
     @Override
@@ -192,6 +183,7 @@ public class MainActivity extends AppCompatActivity implements Serializable {
         sign_up_btn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                isSignUpClicked = true;
                 EditText nameText = (EditText) findViewById(R.id.nameid);
                 EditText emailText = (EditText) findViewById(R.id.email);
                 RadioButton radioFemale = (RadioButton) findViewById(R.id.radioFemale);
@@ -421,13 +413,11 @@ public class MainActivity extends AppCompatActivity implements Serializable {
                 for(String provider:FirebaseAuth.getInstance().getCurrentUser().getProviders())
                     Log.d("FIREBASE USER:",provider);
 
-                if(/*isSignUpClicked*/true){
+                if(isSignUpClicked){
                     FirebaseDatabase database = FirebaseDatabase.getInstance();
                     EditText passwordText = (EditText) findViewById(R.id.passwordid);
-                    User user =new User(mAuth.getCurrentUser().getUid(),name.getText().toString(),gender,FirebaseAuth.getInstance().getCurrentUser().getPhoneNumber(),Contacts.ITEMS,"0",passwordText.getText().toString());
-                    //database.getReference().getRoot().child("Users").push().setValue(user.uid);
+                    User user =new User(mAuth.getCurrentUser().getUid(),name.getText().toString(),gender,FirebaseAuth.getInstance().getCurrentUser().getPhoneNumber(),null,"0",passwordText.getText().toString());
                     System.out.println("FIREBASE SET_VALUE\n\n\n"+user.uid);
-                    //database.getReference().getRoot().child("Users").setValue(user.uid);
                     database.getReference().getRoot().child("Users/"+user.uid+"/").setValue(user);
                 }
 

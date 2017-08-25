@@ -2,10 +2,15 @@ package com.goodsamaritan;
 
 import android.app.FragmentManager;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.location.Location;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.provider.ContactsContract;
+import android.support.annotation.NonNull;
 import android.util.Log;
 import android.view.View;
 import android.support.design.widget.NavigationView;
@@ -16,11 +21,16 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.ImageView;
 import android.widget.TextView;
 //import android.provider.ContactsContract.Contacts; Only for reference. Cannot be imported as there's another Contacts already!
 import android.provider.ContactsContract.CommonDataKinds.Email;
-
-
+import android.widget.Toast;
+import com.facebook.GraphRequest;
+import com.facebook.AccessToken;
+import com.facebook.GraphResponse;
+import com.facebook.FacebookSdk;
+import com.facebook.HttpMethod;
 import com.goodsamaritan.drawer.contacts.ContactsFragment;
 import com.goodsamaritan.drawer.contacts.Contacts;
 import com.goodsamaritan.drawer.home.HomeFragment;
@@ -28,9 +38,13 @@ import com.goodsamaritan.drawer.help_and_feedback.HelpAndFeedbackFragment;
 import com.goodsamaritan.drawer.map.MapFragment;
 import com.goodsamaritan.drawer.settings.SettingsFragment;
 import com.goodsamaritan.drawer.profile.ProfileFragment;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.onegravity.contactpicker.contact.Contact;
@@ -40,9 +54,14 @@ import com.onegravity.contactpicker.core.ContactPickerActivity;
 import com.onegravity.contactpicker.group.Group;
 import com.onegravity.contactpicker.picture.ContactPictureType;
 
+import org.json.JSONObject;
+
+import java.net.URL;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
+
+import static android.os.SystemClock.uptimeMillis;
 
 public class MainScreenActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener,ContactsFragment.OnListFragmentInteractionListener,HomeFragment.OnHomeInteractionListener,HelpAndFeedbackFragment.OnHelpAndFeedbackInteractionListener,SettingsFragment.OnSettingsInteractionListener,ProfileFragment.OnProfileInteractionListener,MapFragment.OnFragmentInteractionListener {
@@ -52,7 +71,7 @@ public class MainScreenActivity extends AppCompatActivity
     FirebaseAuth auth;
     FirebaseDatabase database;
 
-    private static final int CONTACT_PICKER_RESULT = 1001;
+    private List<Contacts.ContactItem> cList;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -98,7 +117,7 @@ public class MainScreenActivity extends AppCompatActivity
         });
 
 
-        //Set Email Id
+        //Set Phone number
         final TextView main_screen_email=(TextView) nav.findViewById(R.id.main_screen_email);
         database.getReference().getRoot().child("Users").child(auth.getCurrentUser().getUid()).child("phone").addValueEventListener(new ValueEventListener() {
             @Override
@@ -121,6 +140,51 @@ public class MainScreenActivity extends AppCompatActivity
         toggle.syncState();
 
         navigationView.setNavigationItemSelectedListener(this);
+
+        //Set Profile Picture
+        setProfilePicture();
+    }
+
+    private void setProfilePicture() {
+        //Sets facebook profile picture and doesn't give any option to the user.
+        Bundle params = new Bundle();
+        params.putString("fields", "id,email,gender,cover,picture.type(large)");
+        Log.d("THREAD",Thread.currentThread().getName());
+
+        new GraphRequest(AccessToken.getCurrentAccessToken(), "me", params, HttpMethod.GET,
+                new GraphRequest.Callback() {
+                    @Override
+                    public void onCompleted(GraphResponse response) {
+                        if (response != null) {
+                            try {
+                                JSONObject data = response.getJSONObject();
+                                if (data.has("picture")) {
+                                    final String profilePicUrl = data.getJSONObject("picture").getJSONObject("data").getString("url");
+                                    Log.d("THREAD",Thread.currentThread().getName());
+                                    new Thread(new Runnable() {
+                                        @Override
+                                        public void run() {
+                                            try {
+                                                final Bitmap profilePic = BitmapFactory.decodeStream(new URL(profilePicUrl).openConnection().getInputStream());
+                                                new Handler(Looper.getMainLooper()).postAtTime(new Runnable() {
+                                                    @Override
+                                                    public void run() {
+                                                        ((ImageView) findViewById(R.id.dp)).setImageBitmap(profilePic);
+                                                    }
+                                                }, uptimeMillis());
+                                            } catch (Exception e){
+                                                e.printStackTrace();
+                                            }
+                                        }
+                                    }).start();
+
+                                }
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                            }
+                        }
+                    }
+                }).executeAsync();
     }
 
     @Override
@@ -279,14 +343,52 @@ public class MainScreenActivity extends AppCompatActivity
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
+        final Intent d = data;
         Log.d("RESULT","Reached");
         if(requestCode == REQUEST_CONTACT){
             if(resultCode == RESULT_OK){
-                List<Contact> contacts = (List<Contact>) data.getSerializableExtra(ContactPickerActivity.RESULT_CONTACT_DATA);
-                for (Contact contact : contacts) {
-                    // process the contacts...
-                    Log.d("RESULT","Got a contact.");
-                }
+
+                database.getReference().getRoot().child("Users/"+auth.getCurrentUser().getUid()+"/contactItemList").addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(DataSnapshot dataSnapshot) {
+                        List<Contact> contacts = (List<Contact>) d.getSerializableExtra(ContactPickerActivity.RESULT_CONTACT_DATA);
+                        cList = (List<Contacts.ContactItem>) dataSnapshot.getValue();
+                        Log.d("CONTACT_PICKED","Yes");
+
+                        for (Contact contact : contacts) {
+                            Log.d("RESULT","Got a contact.");
+
+                            if(cList != null){
+                                //Search for potential duplicate. If found do nothing.
+                            }
+                            //We should check for duplicates but the following code doesn't
+                            Contacts.ContactItem item = new Contacts.ContactItem(contact.getFirstName()+(contact.getLastName().equals("---")?"":" "+contact.getLastName()),contact.getPhone(0),"null");
+                            cList.add(item);
+
+                            Task t=database.getReference().getRoot().child("Users/"+auth.getCurrentUser().getUid()+"/contactItemList").setValue(cList).addOnSuccessListener(new OnSuccessListener() {
+                                @Override
+                                public void onSuccess(Object o) {
+                                    Toast.makeText(MainScreenActivity.this,"Successfully added!",Toast.LENGTH_SHORT).show();
+                                }
+                            }).addOnFailureListener(new OnFailureListener() {
+                                @Override
+                                public void onFailure(@NonNull Exception e) {
+                                    Toast.makeText(MainScreenActivity.this,"Error adding",Toast.LENGTH_SHORT).show();
+
+                                }
+                            });
+
+
+                        }
+
+                    }
+
+                    @Override
+                    public void onCancelled(DatabaseError databaseError) {
+                        Log.d("CONTACT_PICKED","No");
+                    }
+                });
+
 
                 // process groups
                 List<Group> groups = (List<Group>) data.getSerializableExtra(ContactPickerActivity.RESULT_GROUP_DATA);

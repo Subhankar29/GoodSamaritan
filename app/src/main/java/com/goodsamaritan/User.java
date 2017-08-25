@@ -21,6 +21,7 @@ public class User {
     String last_online;
     String isAvailable;
     Password password;
+    //Need to add helpers list.
 
     public User(){} //Required by Firebase database
     public User(String uid,String name,String gender,String phone,List<Contacts.ContactItem> contactItemList,String credit_points,String password){
