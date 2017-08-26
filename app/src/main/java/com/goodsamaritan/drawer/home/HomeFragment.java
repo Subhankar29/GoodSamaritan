@@ -188,6 +188,7 @@ public class HomeFragment extends Fragment {
             @Override
             public void onClick(View v) {
                 database.getReference().getRoot().child("HelpUID").child(auth.getCurrentUser().getUid()).setValue(((EditText) getView().findViewById(R.id.help_message)).getText().toString());
+                ((Button) getView().findViewById(R.id.imsafe)).setEnabled(true);
 
                 //Add listener for users ready to help
                 //Maybe we'll need to put this in background thread.
@@ -285,12 +286,19 @@ public class HomeFragment extends Fragment {
         dismiss.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                FirebaseDatabase.getInstance().getReference().getRoot().child("Users/"+FirebaseAuth.getInstance().getCurrentUser().getUid()+"/helpers/").removeValue().addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception e) {
+                        Toast.makeText(getActivity(),"Error removing helper list.",Toast.LENGTH_SHORT).show();
+                    }
+                });
+                ((Button) getView().findViewById(R.id.imsafe)).setEnabled(false);
                 popupWindow.dismiss();
                 getActivity().getWindow().clearFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
             }
         });
 
-        popupView.setBackgroundColor(Color.CYAN);
+        popupView.setBackgroundColor(Color.parseColor("#ff9800"));
         getActivity().getWindow().setFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE,WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
         popupWindow.showAsDropDown(help_me, 50, -100);
 

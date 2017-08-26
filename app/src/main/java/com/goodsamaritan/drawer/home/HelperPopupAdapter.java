@@ -67,7 +67,7 @@ public class HelperPopupAdapter extends RecyclerView.Adapter<HelperPopupAdapter.
                 database.getReference().getRoot().child("Users").child(helperListUser.getUID()).child("credit_points").setValue("50").addOnCompleteListener(new OnCompleteListener<Void>() {
                     @Override
                     public void onComplete(@NonNull Task<Void> task) {
-                        Toast.makeText(holder.title.getContext(),"User "+helperListUser.getUName()+"awarded 50 credits",Toast.LENGTH_LONG);
+                        Toast.makeText(holder.title.getContext(),"User "+helperListUser.getUName()+"awarded 50 credits",Toast.LENGTH_LONG).show();
                     }
                 });
             }

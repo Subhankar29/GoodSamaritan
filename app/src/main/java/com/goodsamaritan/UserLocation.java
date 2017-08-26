@@ -5,9 +5,9 @@ package com.goodsamaritan;
  */
 
 public class UserLocation {
-    String latitude;
-    String longitude;
-    String provider;
+    public String latitude;
+    public String longitude;
+    public String provider;
 
     public UserLocation(){} //Required by Firebase Database
 }

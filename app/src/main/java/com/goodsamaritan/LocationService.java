@@ -24,22 +24,33 @@ import android.os.Parcelable;
 import android.os.SystemClock;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.telephony.PhoneNumberUtils;
 import android.util.Log;
+import android.widget.Toast;
 
+import com.goodsamaritan.drawer.contacts.Contacts;
+import com.goodsamaritan.drawer.home.HomeFragment;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.LocationServices;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
+
+import static android.telephony.PhoneNumberUtils.TOA_International;
 
 public class LocationService extends Service implements
         GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener {
     static boolean isRunning=false;
     static FirebaseDatabase database;
     static FirebaseAuth auth;
+
+    //For Firebase Database listener
+    private static boolean listened=false;
+    private static boolean flag;
 
     private Handler eventHandler= null;
     private HandlerThread eventThread= null;
@@ -194,7 +205,6 @@ public class LocationService extends Service implements
         database.getReference().getRoot().child("Users").child(auth.getCurrentUser().getUid()).child("location").setValue(userLocation);
         //oUserLocation=location;
         setUserLocation(location);
-
         //Track if you have come near to a person who needs help
         for(final HelpListUser user:maintainer.getUsers()){
             eventHandler.postAtTime(new Runnable() {
@@ -254,7 +264,7 @@ public class LocationService extends Service implements
             Log.e("TRACKER","Objects either not initialized or destroyed!");
             return;
         } else{
-            if((getUserLocation().distanceTo(location)<=500) && !(phone.equals(myphone))){
+            if(((getUserLocation().distanceTo(location)<=500) && !(phone.equals(myphone)))||checkIfInMyContacts(phone)){
 
                 Log.d("PHONE",phone+" "+myphone);
 
@@ -295,6 +305,43 @@ public class LocationService extends Service implements
             }
         }
 
+    }
+
+    private static boolean checkIfInMyContacts(final String phone) {
+        final String fPhone = PhoneNumberUtils.formatNumberToE164(phone,"IN");
+        DatabaseReference ref = FirebaseDatabase.getInstance().getReference().getRoot().child("Users/"+auth.getCurrentUser().getUid()+"/contactItemList");
+        ref.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                for (DataSnapshot postSnapshot: dataSnapshot.getChildren()){
+                    Contacts.ContactItem contact= postSnapshot.getValue(Contacts.ContactItem.class);
+                    Log.d("PHONE_NUMBER",PhoneNumberUtils.formatNumberToE164(contact.phone_number,"IN")+" "+fPhone);
+                    if(PhoneNumberUtils.formatNumberToE164(contact.phone_number,"IN")!=null && PhoneNumberUtils.formatNumberToE164(contact.phone_number,"IN").contains(fPhone)){
+                        flag=true;
+                        listened=true;
+                    }
+                }
+
+                listened=true;
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+                //Note that it simply means failure of data retrieval and not failure in finding contact.
+                listened=true;
+                
+            }
+        });
+        while(!listened){
+            try {
+                Thread.sleep(100);
+                Log.d("THREAD",Thread.currentThread().toString());
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+        listened = false;
+        return flag;
     }
 
     @Override
