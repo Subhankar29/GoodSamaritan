@@ -10,17 +10,17 @@ import java.util.List;
  */
 
 public class User {
-    String uid;
-    String name;
-    String gender;
-    String phone;
-    List<Contacts.ContactItem> contactItemList=new ArrayList<Contacts.ContactItem>();
-    UserLocation location;
-    String credit_points;
-    String is_online;
-    String last_online;
-    String isAvailable;
-    Password password;
+    public String uid;
+    public String name;
+    public String gender;
+    public String phone;
+    public List<Contacts.ContactItem> contactItemList=new ArrayList<Contacts.ContactItem>();
+    public UserLocation location;
+    public String credit_points;
+    public String is_online;
+    public String last_online;
+    public String isAvailable;
+    public Password password;
     //Need to add helpers list.
 
     public User(){} //Required by Firebase database
@@ -42,8 +42,8 @@ public class User {
 }
 
 class Password{
-    String currentPassword;
-    String inputPassword;
+    public String currentPassword;
+    public String inputPassword;
 
     public Password(){} //Required by Firebase database
 
